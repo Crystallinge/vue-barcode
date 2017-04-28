@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="Barcode component for Vue.js.">
+  <meta name="keywords" content="HTML, CSS, JS, JavaScript, vue, vuejs, vue.js, vue component, barcode, component, front-end, frontend, web development">
+  <meta name="author" content="Fengyuan Chen">
+  <title>vue-barcode</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+  <header class="navbar navbar-light navbar-toggleable-md">
+    <nav class="container">
+      <a class="navbar-brand" href="./">vue-barcode</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapse" aria-controls="navbar-collapse" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse justify-content-end" id="navbar-collapse" role="navigation">
+        <nav class="nav navbar-nav float-xs-right">
+          <a class="nav-link" href="https://github.com/xkeshi/vue-barcode/blob/master/README.md">Docs</a>
+          <a class="nav-link" href="https://github.com/xkeshi/vue-barcode/blob/master/LICENSE">License</a>
+          <a class="nav-link" href="https://github.com/xkeshi/vue-barcode">GitHub</a>
+          <a class="nav-link" href="https://github.com/xkeshi">About</a>
+        </nav>
+      </div>
+    </nav>
+  </header>
+
+  <div class="jumbotron bg-primary">
+    <div class="container">
+      <h1>vue-barcode <small>v0.1.0</small></h1>
+      <p class="lead">Barcode component for Vue.js.</p>
+    </div>
+  </div>
+
+  <div class="container">
+    <h3>Examples</h3>
+    <hr>
+    <div id="app">
+      <barcode value="1234567890"></barcode>
+      <barcode value="1234567890" :options="{ lineColor: '#0275d8' }" tag="svg"></barcode>
+      <barcode value="1234567890" tag="img"></barcode>
+    </div>
+    <br>
+
+    <h6>HTML:</h6>
+    <pre class="prettyprint">&lt;div id=&quot;app&quot;&gt;
+  &lt;barcode value=&quot;1234567890&quot;&gt;&lt;/barcode&gt;
+  &lt;barcode value=&quot;1234567890&quot; :options=&quot;{ lineColor: &#039;#0275d8&#039; }&quot; tag=&quot;svg&quot;&gt;&lt;/barcode&gt;
+  &lt;barcode value=&quot;1234567890&quot; tag=&quot;img&quot;&gt;&lt;/barcode&gt;
+&lt;/div&gt;</pre>
+
+    <h6>JavaScript:</h6>
+    <pre class="prettyprint">window.addEventListener('DOMContentLoaded', function () {
+  var Vue = window.Vue;
+  var VueBarcode = window.VueBarcode;
+
+  Vue.component('barcode', VueBarcode);
+
+  new Vue({
+    el: '#app',
+  });
+});
+</pre>
+  </div>
+
+  <footer></footer>
+
+  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js"></script>
+  <script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+  <script src="https://unpkg.com/vue@2.3.0/dist/vue.min.js"></script>
+  <script src="js/vue-barcode.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
