@@ -1,11 +1,11 @@
 /*!
- * vue-barcode v0.1.0
+ * vue-barcode v0.1.1
  * https://github.com/xkeshi/vue-barcode
  *
  * Copyright (c) 2017 xkeshi
  * Released under the MIT license
  *
- * Date: 2017-04-28T09:22:46.655Z
+ * Date: 2017-06-06T06:01:21.964Z
  */
 
 'use strict';
@@ -54,7 +54,34 @@ var createClass = function () {
 
 
 
+var defineProperty = function (obj, key, value) {
+  if (key in obj) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+  } else {
+    obj[key] = value;
+  }
 
+  return obj;
+};
+
+var _extends = Object.assign || function (target) {
+  for (var i = 1; i < arguments.length; i++) {
+    var source = arguments[i];
+
+    for (var key in source) {
+      if (Object.prototype.hasOwnProperty.call(source, key)) {
+        target[key] = source[key];
+      }
+    }
+  }
+
+  return target;
+};
 
 
 
@@ -184,8 +211,54 @@ function mod43checksum(data) {
 	return checksum;
 }
 
-// This is the master class, it does require the start code to be
-// included in the string
+var _SET_BY_CODE;
+
+// constants for internal usage
+var SET_A = 0;
+var SET_B = 1;
+var SET_C = 2;
+
+// Special characters
+var SHIFT = 98;
+var START_A = 103;
+var START_B = 104;
+var START_C = 105;
+var MODULO = 103;
+var STOP = 106;
+
+// Get set by start code
+var SET_BY_CODE = (_SET_BY_CODE = {}, defineProperty(_SET_BY_CODE, START_A, SET_A), defineProperty(_SET_BY_CODE, START_B, SET_B), defineProperty(_SET_BY_CODE, START_C, SET_C), _SET_BY_CODE);
+
+// Get next set by code
+var SWAP = {
+	101: SET_A,
+	100: SET_B,
+	99: SET_C
+};
+
+var A_START_CHAR = String.fromCharCode(208); // START_A + 105
+var B_START_CHAR = String.fromCharCode(209); // START_B + 105
+var C_START_CHAR = String.fromCharCode(210); // START_C + 105
+
+// 128A (Code Set A)
+// ASCII characters 00 to 95 (0–9, A–Z and control codes), special characters, and FNC 1–4
+var A_CHARS = "[\x00-\x5F\xC8-\xCF]";
+
+// 128B (Code Set B)
+// ASCII characters 32 to 127 (0–9, A–Z, a–z), special characters, and FNC 1–4
+var B_CHARS = "[\x20-\x7F\xC8-\xCF]";
+
+// 128C (Code Set C)
+// 00–99 (encodes two digits with a single code point) and FNC1
+var C_CHARS = "(\xCF*[0-9]{2}\xCF*)";
+
+// CODE128 includes 107 symbols:
+// 103 data symbols, 3 start symbols (A, B and C), and 1 stop symbol (the last one)
+// Each symbol consist of three black bars (1) and three white spaces (0).
+var BARS = [11011001100, 11001101100, 11001100110, 10010011000, 10010001100, 10001001100, 10011001000, 10011000100, 10001100100, 11001001000, 11001000100, 11000100100, 10110011100, 10011011100, 10011001110, 10111001100, 10011101100, 10011100110, 11001110010, 11001011100, 11001001110, 11011100100, 11001110100, 11101101110, 11101001100, 11100101100, 11100100110, 11101100100, 11100110100, 11100110010, 11011011000, 11011000110, 11000110110, 10100011000, 10001011000, 10001000110, 10110001000, 10001101000, 10001100010, 11010001000, 11000101000, 11000100010, 10110111000, 10110001110, 10001101110, 10111011000, 10111000110, 10001110110, 11101110110, 11010001110, 11000101110, 11011101000, 11011100010, 11011101110, 11101011000, 11101000110, 11100010110, 11101101000, 11101100010, 11100011010, 11101111010, 11001000010, 11110001010, 10100110000, 10100001100, 10010110000, 10010000110, 10000101100, 10000100110, 10110010000, 10110000100, 10011010000, 10011000010, 10000110100, 10000110010, 11000010010, 11001010000, 11110111010, 11000010100, 10001111010, 10100111100, 10010111100, 10010011110, 10111100100, 10011110100, 10011110010, 11110100100, 11110010100, 11110010010, 11011011110, 11011110110, 11110110110, 10101111000, 10100011110, 10001011110, 10111101000, 10111100010, 11110101000, 11110100010, 10111011110, 10111101110, 11101011110, 11110101110, 11010000100, 11010010000, 11010011100, 1100011101011];
+
+// This is the master class,
+// it does require the start code to be included in the string
 
 var CODE128$1 = function (_Barcode) {
 	inherits(CODE128, _Barcode);
@@ -193,235 +266,189 @@ var CODE128$1 = function (_Barcode) {
 	function CODE128(data, options) {
 		classCallCheck(this, CODE128);
 
-		// Fill the bytes variable with the ascii codes of string
+		// Get array of ascii codes from data
 		var _this = possibleConstructorReturn(this, (CODE128.__proto__ || Object.getPrototypeOf(CODE128)).call(this, data.substring(1), options));
 
-		_this.bytes = [];
-		for (var i = 0; i < data.length; ++i) {
-			_this.bytes.push(data.charCodeAt(i));
-		}
-
-		// Data for each character, the last characters will not be encoded but are used for error correction
-		// Numbers encode to (n + 1000) -> binary; 740 -> (740 + 1000).toString(2) -> "11011001100"
-		_this.encodings = [// + 1000
-		740, 644, 638, 176, 164, 100, 224, 220, 124, 608, 604, 572, 436, 244, 230, 484, 260, 254, 650, 628, 614, 764, 652, 902, 868, 836, 830, 892, 844, 842, 752, 734, 590, 304, 112, 94, 416, 128, 122, 672, 576, 570, 464, 422, 134, 496, 478, 142, 910, 678, 582, 768, 762, 774, 880, 862, 814, 896, 890, 818, 914, 602, 930, 328, 292, 200, 158, 68, 62, 424, 412, 232, 218, 76, 74, 554, 616, 978, 556, 146, 340, 212, 182, 508, 268, 266, 956, 940, 938, 758, 782, 974, 400, 310, 118, 512, 506, 960, 954, 502, 518, 886, 966, /* Start codes */668, 680, 692, 5379];
+		_this.bytes = data.split('').map(function (char) {
+			return char.charCodeAt(0);
+		});
 		return _this;
 	}
 
-	// The public encoding function
-
-
 	createClass(CODE128, [{
-		key: "encode",
-		value: function encode() {
-			var encodingResult;
-			var bytes = this.bytes;
-			// Remove the startcode from the bytes and set its index
-			var startIndex = bytes.shift() - 105;
+		key: 'valid',
+		value: function valid() {
+			// ASCII value ranges 0-127, 200-211
+			return (/^[\x00-\x7F\xC8-\xD3]+$/.test(this.data)
+			);
+		}
 
-			// Start encode with the right type
-			if (startIndex === 103) {
-				encodingResult = this.nextA(bytes, 1);
-			} else if (startIndex === 104) {
-				encodingResult = this.nextB(bytes, 1);
-			} else if (startIndex === 105) {
-				encodingResult = this.nextC(bytes, 1);
-			} else {
-				throw new InvalidStartCharacterException();
+		// The public encoding function
+
+	}, {
+		key: 'encode',
+		value: function encode() {
+			var bytes = this.bytes;
+			// Remove the start code from the bytes and set its index
+			var startIndex = bytes.shift() - 105;
+			// Get start set by index
+			var startSet = SET_BY_CODE[startIndex];
+
+			if (startSet === undefined) {
+				throw new RangeError('The encoding does not start with a start character.');
 			}
 
+			// Start encode with the right type
+			var encodingResult = CODE128.next(bytes, 1, startSet);
+
 			return {
-				text: this.text == this.data ? this.text.replace(/[^\x20-\x7E]/g, "") : this.text,
+				text: this.text === this.data ? this.text.replace(/[^\x20-\x7E]/g, '') : this.text,
 				data:
 				// Add the start bits
-				this.getEncoding(startIndex) +
+				CODE128.getBar(startIndex) +
 				// Add the encoded bits
 				encodingResult.result +
 				// Add the checksum
-				this.getEncoding((encodingResult.checksum + startIndex) % 103) +
+				CODE128.getBar((encodingResult.checksum + startIndex) % MODULO) +
 				// Add the end bits
-				this.getEncoding(106)
+				CODE128.getBar(STOP)
 			};
 		}
-	}, {
-		key: "getEncoding",
-		value: function getEncoding(n) {
-			return this.encodings[n] ? (this.encodings[n] + 1000).toString(2) : '';
+
+		// Get a bar symbol by index
+
+	}], [{
+		key: 'getBar',
+		value: function getBar(index) {
+			return BARS[index] ? BARS[index].toString() : '';
 		}
 
-		// Use the regexp variable for validation
+		// Correct an index by a set and shift it from the bytes array
 
 	}, {
-		key: "valid",
-		value: function valid() {
-			// ASCII value ranges 0-127, 200-211
-			return this.data.search(/^[\x00-\x7F\xC8-\xD3]+$/) !== -1;
+		key: 'correctIndex',
+		value: function correctIndex(bytes, set$$1) {
+			if (set$$1 === SET_A) {
+				var charCode = bytes.shift();
+				return charCode < 32 ? charCode + 64 : charCode - 32;
+			} else if (set$$1 === SET_B) {
+				return bytes.shift() - 32;
+			} else {
+				return (bytes.shift() - 48) * 10 + bytes.shift() - 48;
+			}
 		}
 	}, {
-		key: "nextA",
-		value: function nextA(bytes, depth) {
-			if (bytes.length <= 0) {
-				return { "result": "", "checksum": 0 };
+		key: 'next',
+		value: function next(bytes, pos, set$$1) {
+			if (!bytes.length) {
+				return { result: '', checksum: 0 };
 			}
 
-			var next, index;
+			var nextCode = void 0,
+			    index = void 0;
 
 			// Special characters
 			if (bytes[0] >= 200) {
-				index = bytes[0] - 105;
+				index = bytes.shift() - 105;
+				var nextSet = SWAP[index];
 
-				// Remove first element
-				bytes.shift();
-
-				// Swap to CODE128C
-				if (index === 99) {
-					next = this.nextC(bytes, depth + 1);
+				// Swap to other set
+				if (nextSet !== undefined) {
+					nextCode = CODE128.next(bytes, pos + 1, nextSet);
 				}
-				// Swap to CODE128B
-				else if (index === 100) {
-						next = this.nextB(bytes, depth + 1);
-					}
-					// Shift
-					else if (index === 98) {
+				// Continue on current set but encode a special character
+				else {
+						// Shift
+						if ((set$$1 === SET_A || set$$1 === SET_B) && index === SHIFT) {
 							// Convert the next character so that is encoded correctly
-							bytes[0] = bytes[0] > 95 ? bytes[0] - 96 : bytes[0];
-							next = this.nextA(bytes, depth + 1);
+							bytes[0] = set$$1 === SET_A ? bytes[0] > 95 ? bytes[0] - 96 : bytes[0] : bytes[0] < 32 ? bytes[0] + 96 : bytes[0];
 						}
-						// Continue on CODE128A but encode a special character
-						else {
-								next = this.nextA(bytes, depth + 1);
-							}
+						nextCode = CODE128.next(bytes, pos + 1, set$$1);
+					}
 			}
-			// Continue encoding of CODE128A
+			// Continue encoding
 			else {
-					var charCode = bytes[0];
-					index = charCode < 32 ? charCode + 64 : charCode - 32;
-
-					// Remove first element
-					bytes.shift();
-
-					next = this.nextA(bytes, depth + 1);
+					index = CODE128.correctIndex(bytes, set$$1);
+					nextCode = CODE128.next(bytes, pos + 1, set$$1);
 				}
 
 			// Get the correct binary encoding and calculate the weight
-			var enc = this.getEncoding(index);
-			var weight = index * depth;
+			var enc = CODE128.getBar(index);
+			var weight = index * pos;
 
 			return {
-				"result": enc + next.result,
-				"checksum": weight + next.checksum
+				result: enc + nextCode.result,
+				checksum: weight + nextCode.checksum
 			};
-		}
-	}, {
-		key: "nextB",
-		value: function nextB(bytes, depth) {
-			if (bytes.length <= 0) {
-				return { "result": "", "checksum": 0 };
-			}
-
-			var next, index;
-
-			// Special characters
-			if (bytes[0] >= 200) {
-				index = bytes[0] - 105;
-
-				// Remove first element
-				bytes.shift();
-
-				// Swap to CODE128C
-				if (index === 99) {
-					next = this.nextC(bytes, depth + 1);
-				}
-				// Swap to CODE128A
-				else if (index === 101) {
-						next = this.nextA(bytes, depth + 1);
-					}
-					// Shift
-					else if (index === 98) {
-							// Convert the next character so that is encoded correctly
-							bytes[0] = bytes[0] < 32 ? bytes[0] + 96 : bytes[0];
-							next = this.nextB(bytes, depth + 1);
-						}
-						// Continue on CODE128B but encode a special character
-						else {
-								next = this.nextB(bytes, depth + 1);
-							}
-			}
-			// Continue encoding of CODE128B
-			else {
-					index = bytes[0] - 32;
-					bytes.shift();
-					next = this.nextB(bytes, depth + 1);
-				}
-
-			// Get the correct binary encoding and calculate the weight
-			var enc = this.getEncoding(index);
-			var weight = index * depth;
-
-			return { "result": enc + next.result, "checksum": weight + next.checksum };
-		}
-	}, {
-		key: "nextC",
-		value: function nextC(bytes, depth) {
-			if (bytes.length <= 0) {
-				return { "result": "", "checksum": 0 };
-			}
-
-			var next, index;
-
-			// Special characters
-			if (bytes[0] >= 200) {
-				index = bytes[0] - 105;
-
-				// Remove first element
-				bytes.shift();
-
-				// Swap to CODE128B
-				if (index === 100) {
-					next = this.nextB(bytes, depth + 1);
-				}
-				// Swap to CODE128A
-				else if (index === 101) {
-						next = this.nextA(bytes, depth + 1);
-					}
-					// Continue on CODE128C but encode a special character
-					else {
-							next = this.nextC(bytes, depth + 1);
-						}
-			}
-			// Continue encoding of CODE128C
-			else {
-					index = (bytes[0] - 48) * 10 + bytes[1] - 48;
-					bytes.shift();
-					bytes.shift();
-					next = this.nextC(bytes, depth + 1);
-				}
-
-			// Get the correct binary encoding and calculate the weight
-			var enc = this.getEncoding(index);
-			var weight = index * depth;
-
-			return { "result": enc + next.result, "checksum": weight + next.checksum };
 		}
 	}]);
 	return CODE128;
 }(Barcode);
 
-var InvalidStartCharacterException = function (_Error) {
-	inherits(InvalidStartCharacterException, _Error);
+// Match Set functions
+var matchSetALength = function matchSetALength(string) {
+	return string.match(new RegExp('^' + A_CHARS + '*'))[0].length;
+};
+var matchSetBLength = function matchSetBLength(string) {
+	return string.match(new RegExp('^' + B_CHARS + '*'))[0].length;
+};
+var matchSetC = function matchSetC(string) {
+	return string.match(new RegExp('^' + C_CHARS + '*'))[0];
+};
 
-	function InvalidStartCharacterException() {
-		classCallCheck(this, InvalidStartCharacterException);
+// CODE128A or CODE128B
+function autoSelectFromAB(string, isA) {
+	var ranges = isA ? A_CHARS : B_CHARS;
+	var untilC = string.match(new RegExp('^(' + ranges + '+?)(([0-9]{2}){2,})([^0-9]|$)'));
 
-		var _this2 = possibleConstructorReturn(this, (InvalidStartCharacterException.__proto__ || Object.getPrototypeOf(InvalidStartCharacterException)).call(this));
-
-		_this2.name = "InvalidStartCharacterException";
-		_this2.message = "The encoding does not start with a start character.";
-		return _this2;
+	if (untilC) {
+		return untilC[1] + String.fromCharCode(204) + autoSelectFromC(string.substring(untilC[1].length));
 	}
 
-	return InvalidStartCharacterException;
-}(Error);
+	var chars = string.match(new RegExp('^' + ranges + '+'))[0];
+
+	if (chars.length === string.length) {
+		return string;
+	}
+
+	return chars + String.fromCharCode(isA ? 205 : 206) + autoSelectFromAB(string.substring(chars.length), !isA);
+}
+
+// CODE128C
+function autoSelectFromC(string) {
+	var cMatch = matchSetC(string);
+	var length = cMatch.length;
+
+	if (length === string.length) {
+		return string;
+	}
+
+	string = string.substring(length);
+
+	// Select A/B depending on the longest match
+	var isA = matchSetALength(string) >= matchSetBLength(string);
+	return cMatch + String.fromCharCode(isA ? 206 : 205) + autoSelectFromAB(string, isA);
+}
+
+// Detect Code Set (A, B or C) and format the string
+var autoSelectModes = (function (string) {
+	var newString = void 0;
+	var cLength = matchSetC(string).length;
+
+	// Select 128C if the string start with enough digits
+	if (cLength >= 2) {
+		newString = C_START_CHAR + autoSelectFromC(string);
+	} else {
+		// Select A/B depending on the longest match
+		var isA = matchSetALength(string) > matchSetBLength(string);
+		newString = (isA ? A_START_CHAR : B_START_CHAR) + autoSelectFromAB(string, isA);
+	}
+
+	return newString.replace(/[\xCD\xCE]([^])[\xCD\xCE]/, // Any sequence between 205 and 206 characters
+	function (match, char) {
+		return String.fromCharCode(203) + char;
+	});
+});
 
 var CODE128AUTO = function (_CODE) {
 	inherits(CODE128AUTO, _CODE);
@@ -430,7 +457,7 @@ var CODE128AUTO = function (_CODE) {
 		classCallCheck(this, CODE128AUTO);
 
 		// ASCII value ranges 0-127, 200-211
-		if (data.search(/^[\x00-\x7F\xC8-\xD3]+$/) !== -1) {
+		if (/^[\x00-\x7F\xC8-\xD3]+$/.test(data)) {
 			var _this = possibleConstructorReturn(this, (CODE128AUTO.__proto__ || Object.getPrototypeOf(CODE128AUTO)).call(this, autoSelectModes(data), options));
 		} else {
 			var _this = possibleConstructorReturn(this, (CODE128AUTO.__proto__ || Object.getPrototypeOf(CODE128AUTO)).call(this, data, options));
@@ -441,95 +468,18 @@ var CODE128AUTO = function (_CODE) {
 	return CODE128AUTO;
 }(CODE128$1);
 
-function autoSelectModes(string) {
-	// ASCII ranges 0-98 and 200-207 (FUNCs and SHIFTs)
-	var aLength = string.match(/^[\x00-\x5F\xC8-\xCF]*/)[0].length;
-	// ASCII ranges 32-127 and 200-207 (FUNCs and SHIFTs)
-	var bLength = string.match(/^[\x20-\x7F\xC8-\xCF]*/)[0].length;
-	// Number pairs or [FNC1]
-	var cLength = string.match(/^(\xCF*[0-9]{2}\xCF*)*/)[0].length;
-
-	var newString;
-	// Select CODE128C if the string start with enough digits
-	if (cLength >= 2) {
-		newString = String.fromCharCode(210) + autoSelectFromC(string);
-	}
-	// Select A/C depending on the longest match
-	else if (aLength > bLength) {
-			newString = String.fromCharCode(208) + autoSelectFromA(string);
-		} else {
-			newString = String.fromCharCode(209) + autoSelectFromB(string);
-		}
-
-	newString = newString.replace(/[\xCD\xCE]([^])[\xCD\xCE]/, function (match, char) {
-		return String.fromCharCode(203) + char;
-	});
-
-	return newString;
-}
-
-function autoSelectFromA(string) {
-	var untilC = string.match(/^([\x00-\x5F\xC8-\xCF]+?)(([0-9]{2}){2,})([^0-9]|$)/);
-
-	if (untilC) {
-		return untilC[1] + String.fromCharCode(204) + autoSelectFromC(string.substring(untilC[1].length));
-	}
-
-	var aChars = string.match(/^[\x00-\x5F\xC8-\xCF]+/);
-	if (aChars[0].length === string.length) {
-		return string;
-	}
-
-	return aChars[0] + String.fromCharCode(205) + autoSelectFromB(string.substring(aChars[0].length));
-}
-
-function autoSelectFromB(string) {
-	var untilC = string.match(/^([\x20-\x7F\xC8-\xCF]+?)(([0-9]{2}){2,})([^0-9]|$)/);
-
-	if (untilC) {
-		return untilC[1] + String.fromCharCode(204) + autoSelectFromC(string.substring(untilC[1].length));
-	}
-
-	var bChars = string.match(/^[\x20-\x7F\xC8-\xCF]+/);
-	if (bChars[0].length === string.length) {
-		return string;
-	}
-
-	return bChars[0] + String.fromCharCode(206) + autoSelectFromA(string.substring(bChars[0].length));
-}
-
-function autoSelectFromC(string) {
-	var cMatch = string.match(/^(\xCF*[0-9]{2}\xCF*)+/)[0];
-	var length = cMatch.length;
-
-	if (length === string.length) {
-		return string;
-	}
-
-	string = string.substring(length);
-
-	// Select A/B depending on the longest match
-	var aLength = string.match(/^[\x00-\x5F\xC8-\xCF]*/)[0].length;
-	var bLength = string.match(/^[\x20-\x7F\xC8-\xCF]*/)[0].length;
-	if (aLength >= bLength) {
-		return cMatch + String.fromCharCode(206) + autoSelectFromA(string);
-	} else {
-		return cMatch + String.fromCharCode(205) + autoSelectFromB(string);
-	}
-}
-
 var CODE128A = function (_CODE) {
 	inherits(CODE128A, _CODE);
 
 	function CODE128A(string, options) {
 		classCallCheck(this, CODE128A);
-		return possibleConstructorReturn(this, (CODE128A.__proto__ || Object.getPrototypeOf(CODE128A)).call(this, String.fromCharCode(208) + string, options));
+		return possibleConstructorReturn(this, (CODE128A.__proto__ || Object.getPrototypeOf(CODE128A)).call(this, A_START_CHAR + string, options));
 	}
 
 	createClass(CODE128A, [{
 		key: 'valid',
 		value: function valid() {
-			return this.data.search(/^[\x00-\x5F\xC8-\xCF]+$/) !== -1;
+			return new RegExp('^' + A_CHARS + '+$').test(this.data);
 		}
 	}]);
 	return CODE128A;
@@ -540,13 +490,13 @@ var CODE128B = function (_CODE) {
 
 	function CODE128B(string, options) {
 		classCallCheck(this, CODE128B);
-		return possibleConstructorReturn(this, (CODE128B.__proto__ || Object.getPrototypeOf(CODE128B)).call(this, String.fromCharCode(209) + string, options));
+		return possibleConstructorReturn(this, (CODE128B.__proto__ || Object.getPrototypeOf(CODE128B)).call(this, B_START_CHAR + string, options));
 	}
 
 	createClass(CODE128B, [{
 		key: 'valid',
 		value: function valid() {
-			return this.data.search(/^[\x20-\x7F\xC8-\xCF]+$/) !== -1;
+			return new RegExp('^' + B_CHARS + '+$').test(this.data);
 		}
 	}]);
 	return CODE128B;
@@ -557,13 +507,13 @@ var CODE128C = function (_CODE) {
 
 	function CODE128C(string, options) {
 		classCallCheck(this, CODE128C);
-		return possibleConstructorReturn(this, (CODE128C.__proto__ || Object.getPrototypeOf(CODE128C)).call(this, String.fromCharCode(210) + string, options));
+		return possibleConstructorReturn(this, (CODE128C.__proto__ || Object.getPrototypeOf(CODE128C)).call(this, C_START_CHAR + string, options));
 	}
 
 	createClass(CODE128C, [{
 		key: 'valid',
 		value: function valid() {
-			return this.data.search(/^(\xCF*[0-9]{2}\xCF*)+$/) !== -1;
+			return new RegExp('^' + C_CHARS + '+$').test(this.data);
 		}
 	}]);
 	return CODE128C;
@@ -578,14 +528,22 @@ var EANencoder = function () {
 		this.endBin = "101";
 		this.middleBin = "01010";
 
-		// The L (left) type of encoding
-		this.Lbinary = ["0001101", "0011001", "0010011", "0111101", "0100011", "0110001", "0101111", "0111011", "0110111", "0001011"];
+		this.binaries = {
+			// The L (left) type of encoding
+			"L": ["0001101", "0011001", "0010011", "0111101", "0100011", "0110001", "0101111", "0111011", "0110111", "0001011"],
 
-		// The G type of encoding
-		this.Gbinary = ["0100111", "0110011", "0011011", "0100001", "0011101", "0111001", "0000101", "0010001", "0001001", "0010111"];
+			// The G type of encoding
+			"G": ["0100111", "0110011", "0011011", "0100001", "0011101", "0111001", "0000101", "0010001", "0001001", "0010111"],
 
-		// The R (right) type of encoding
-		this.Rbinary = ["1110010", "1100110", "1101100", "1000010", "1011100", "1001110", "1010000", "1000100", "1001000", "1110100"];
+			// The R (right) type of encoding
+			"R": ["1110010", "1100110", "1101100", "1000010", "1011100", "1001110", "1010000", "1000100", "1001000", "1110100"],
+
+			// The O (odd) encoding for UPC-E
+			"O": ["0001101", "0011001", "0010011", "0111101", "0100011", "0110001", "0101111", "0111011", "0110111", "0001011"],
+
+			// The E (even) encoding for UPC-E
+			"E": ["0100111", "0110011", "0011011", "0100001", "0011101", "0111001", "0000101", "0010001", "0001001", "0010111"]
+		};
 	}
 
 	// Convert a numberarray to the representing
@@ -603,12 +561,9 @@ var EANencoder = function () {
 			// Loop all the numbers
 			for (var i = 0; i < number.length; i++) {
 				// Using the L, G or R encoding and add it to the returning variable
-				if (structure[i] == "L") {
-					result += this.Lbinary[number[i]];
-				} else if (structure[i] == "G") {
-					result += this.Gbinary[number[i]];
-				} else if (structure[i] == "R") {
-					result += this.Rbinary[number[i]];
+				var binary = this.binaries[structure[i]];
+				if (binary) {
+					result += binary[number[i]];
 				}
 
 				// Add separator in between encodings
@@ -1028,7 +983,7 @@ var UPC = function (_Barcode) {
 			var encoder = new EANencoder();
 			var result = [];
 
-			// Add the first digigt
+			// Add the first digit
 			if (this.displayValue) {
 				result.push({
 					data: "00000000",
@@ -1100,6 +1055,167 @@ function checksum$2(number) {
 	}
 
 	return (10 - result % 10) % 10;
+}
+
+// Encoding documentation:
+// https://en.wikipedia.org/wiki/Universal_Product_Code#Encoding
+//
+// UPC-E documentation:
+// https://en.wikipedia.org/wiki/Universal_Product_Code#UPC-E
+
+var EXPANSIONS = ["XX00000XXX", "XX10000XXX", "XX20000XXX", "XXX00000XX", "XXXX00000X", "XXXXX00005", "XXXXX00006", "XXXXX00007", "XXXXX00008", "XXXXX00009"];
+
+var PARITIES = [["EEEOOO", "OOOEEE"], ["EEOEOO", "OOEOEE"], ["EEOOEO", "OOEEOE"], ["EEOOOE", "OOEEEO"], ["EOEEOO", "OEOOEE"], ["EOOEEO", "OEEOOE"], ["EOOOEE", "OEEEOO"], ["EOEOEO", "OEOEOE"], ["EOEOOE", "OEOEEO"], ["EOOEOE", "OEEOEO"]];
+
+var UPCE = function (_Barcode) {
+	inherits(UPCE, _Barcode);
+
+	function UPCE(data, options) {
+		classCallCheck(this, UPCE);
+
+		var _this = possibleConstructorReturn(this, (UPCE.__proto__ || Object.getPrototypeOf(UPCE)).call(this, data, options));
+		// Code may be 6 or 8 digits;
+		// A 7 digit code is ambiguous as to whether the extra digit
+		// is a UPC-A check or number system digit.
+
+
+		_this.isValid = false;
+		if (data.search(/^[0-9]{6}$/) !== -1) {
+			_this.middleDigits = data;
+			_this.upcA = expandToUPCA(data, "0");
+			_this.text = options.text || '' + _this.upcA[0] + data + _this.upcA[_this.upcA.length - 1];
+			_this.isValid = true;
+		} else if (data.search(/^[01][0-9]{7}$/) !== -1) {
+			_this.middleDigits = data.substring(1, data.length - 1);
+			_this.upcA = expandToUPCA(_this.middleDigits, data[0]);
+
+			if (_this.upcA[_this.upcA.length - 1] === data[data.length - 1]) {
+				_this.isValid = true;
+			} else {
+				// checksum mismatch
+				return possibleConstructorReturn(_this);
+			}
+		} else {
+			return possibleConstructorReturn(_this);
+		}
+
+		_this.displayValue = options.displayValue;
+
+		// Make sure the font is not bigger than the space between the guard bars
+		if (options.fontSize > options.width * 10) {
+			_this.fontSize = options.width * 10;
+		} else {
+			_this.fontSize = options.fontSize;
+		}
+
+		// Make the guard bars go down half the way of the text
+		_this.guardHeight = options.height + _this.fontSize / 2 + options.textMargin;
+		return _this;
+	}
+
+	createClass(UPCE, [{
+		key: 'valid',
+		value: function valid() {
+			return this.isValid;
+		}
+	}, {
+		key: 'encode',
+		value: function encode() {
+			if (this.options.flat) {
+				return this.flatEncoding();
+			} else {
+				return this.guardedEncoding();
+			}
+		}
+	}, {
+		key: 'flatEncoding',
+		value: function flatEncoding() {
+			var encoder = new EANencoder();
+			var result = "";
+
+			result += "101";
+			result += this.encodeMiddleDigits(encoder);
+			result += "010101";
+
+			return {
+				data: result,
+				text: this.text
+			};
+		}
+	}, {
+		key: 'guardedEncoding',
+		value: function guardedEncoding() {
+			var encoder = new EANencoder();
+			var result = [];
+
+			// Add the UPC-A number system digit beneath the quiet zone
+			if (this.displayValue) {
+				result.push({
+					data: "00000000",
+					text: this.text[0],
+					options: { textAlign: "left", fontSize: this.fontSize }
+				});
+			}
+
+			// Add the guard bars
+			result.push({
+				data: "101",
+				options: { height: this.guardHeight }
+			});
+
+			// Add the 6 UPC-E digits
+			result.push({
+				data: this.encodeMiddleDigits(encoder),
+				text: this.text.substring(1, 7),
+				options: { fontSize: this.fontSize }
+			});
+
+			// Add the end bits
+			result.push({
+				data: "010101",
+				options: { height: this.guardHeight }
+			});
+
+			// Add the UPC-A check digit beneath the quiet zone
+			if (this.displayValue) {
+				result.push({
+					data: "00000000",
+					text: this.text[7],
+					options: { textAlign: "right", fontSize: this.fontSize }
+				});
+			}
+
+			return result;
+		}
+	}, {
+		key: 'encodeMiddleDigits',
+		value: function encodeMiddleDigits(encoder) {
+			var numberSystem = this.upcA[0];
+			var checkDigit = this.upcA[this.upcA.length - 1];
+			var parity = PARITIES[parseInt(checkDigit)][parseInt(numberSystem)];
+			return encoder.encode(this.middleDigits, parity);
+		}
+	}]);
+	return UPCE;
+}(Barcode);
+
+function expandToUPCA(middleDigits, numberSystem) {
+	var lastUpcE = parseInt(middleDigits[middleDigits.length - 1]);
+	var expansion = EXPANSIONS[lastUpcE];
+
+	var result = "";
+	var digitIndex = 0;
+	for (var i = 0; i < expansion.length; i++) {
+		var c = expansion[i];
+		if (c === 'X') {
+			result += middleDigits[digitIndex++];
+		} else {
+			result += c;
+		}
+	}
+
+	result = '' + numberSystem + result;
+	return '' + result + checksum$2(result);
 }
 
 var ITF14 = function (_Barcode) {
@@ -1542,7 +1658,7 @@ var GenericBarcode = function (_Barcode) {
 var barcodes = {
 	CODE39: CODE39,
 	CODE128: CODE128AUTO, CODE128A: CODE128A, CODE128B: CODE128B, CODE128C: CODE128C,
-	EAN13: EAN13, EAN8: EAN8, EAN5: EAN5, EAN2: EAN2, UPC: UPC,
+	EAN13: EAN13, EAN8: EAN8, EAN5: EAN5, EAN2: EAN2, UPC: UPC, UPCE: UPCE,
 	ITF14: ITF14,
 	ITF: ITF,
 	MSI: MSI, MSI10: MSI10, MSI11: MSI11, MSI1010: MSI1010, MSI1110: MSI1110,
@@ -1551,21 +1667,9 @@ var barcodes = {
 	GenericBarcode: GenericBarcode
 };
 
-function merge$1(old, replaceObj) {
-	var newMerge = {};
-	var k;
-	for (k in old) {
-		if (old.hasOwnProperty(k)) {
-			newMerge[k] = old[k];
-		}
-	}
-	for (k in replaceObj) {
-		if (replaceObj.hasOwnProperty(k) && typeof replaceObj[k] !== "undefined") {
-			newMerge[k] = replaceObj[k];
-		}
-	}
-	return newMerge;
-}
+var merge = (function (old, replaceObj) {
+  return _extends({}, old, replaceObj);
+});
 
 // Encodings can be nestled like [[1-1, 1-2], 2, [3-1, 3-2]
 // Convert to [1-1, 1-2, 2, 3-1, 3-2]
@@ -1683,7 +1787,7 @@ function getBarcodePadding(textWidth, barcodeWidth, options) {
 function calculateEncodingAttributes(encodings, barcodeOptions, context) {
 	for (var i = 0; i < encodings.length; i++) {
 		var encoding = encodings[i];
-		var options = merge$1(barcodeOptions, encoding.options);
+		var options = merge(barcodeOptions, encoding.options);
 
 		// Calculate the width of the encoding
 		var textWidth;
@@ -1722,12 +1826,16 @@ function getMaximumHeightOfEncodings(encodings) {
 
 function messureText(string, options, context) {
 	var ctx;
-	if (typeof context === "undefined") {
+
+	if (context) {
+		ctx = context;
+	} else if (typeof document !== "undefined") {
 		ctx = document.createElement("canvas").getContext("2d");
 	} else {
-		ctx = context;
+		// If the text cannot be messured we will return 0.
+		// This will make some barcode with big text render incorrectly
+		return 0;
 	}
-
 	ctx.font = options.fontOptions + " " + options.fontSize + "px " + options.font;
 
 	// Calculate the width of the encoding
@@ -1755,7 +1863,7 @@ var CanvasRenderer = function () {
 
 			this.prepareCanvas();
 			for (var i = 0; i < this.encodings.length; i++) {
-				var encodingOptions = merge$1(this.options, this.encodings[i].options);
+				var encodingOptions = merge(this.options, this.encodings[i].options);
 
 				this.drawCanvasBarcode(encodingOptions, this.encodings[i]);
 				this.drawCanvasText(encodingOptions, this.encodings[i]);
@@ -1883,6 +1991,7 @@ var SVGRenderer = function () {
 		this.svg = svg;
 		this.encodings = encodings;
 		this.options = options;
+		this.document = options.xmlDocument || document;
 	}
 
 	createClass(SVGRenderer, [{
@@ -1893,11 +2002,11 @@ var SVGRenderer = function () {
 			this.prepareSVG();
 			for (var i = 0; i < this.encodings.length; i++) {
 				var encoding = this.encodings[i];
-				var encodingOptions = merge$1(this.options, encoding.options);
+				var encodingOptions = merge(this.options, encoding.options);
 
-				var group = createGroup(currentX, encodingOptions.marginTop, this.svg);
+				var group = this.createGroup(currentX, encodingOptions.marginTop, this.svg);
 
-				setGroupOptions(group, encodingOptions);
+				this.setGroupOptions(group, encodingOptions);
 
 				this.drawSvgBarcode(group, encodingOptions, encoding);
 				this.drawSVGText(group, encodingOptions, encoding);
@@ -1921,7 +2030,7 @@ var SVGRenderer = function () {
 			this.setSvgAttributes(width, maxHeight);
 
 			if (this.options.background) {
-				drawRect(0, 0, width, maxHeight, this.svg).setAttribute("style", "fill:" + this.options.background + ";");
+				this.drawRect(0, 0, width, maxHeight, this.svg).setAttribute("style", "fill:" + this.options.background + ";");
 			}
 		}
 	}, {
@@ -1945,20 +2054,20 @@ var SVGRenderer = function () {
 				if (binary[b] === "1") {
 					barWidth++;
 				} else if (barWidth > 0) {
-					drawRect(x - options.width * barWidth, yFrom, options.width * barWidth, options.height, parent);
+					this.drawRect(x - options.width * barWidth, yFrom, options.width * barWidth, options.height, parent);
 					barWidth = 0;
 				}
 			}
 
 			// Last draw is needed since the barcode ends with 1
 			if (barWidth > 0) {
-				drawRect(x - options.width * (barWidth - 1), yFrom, options.width * barWidth, options.height, parent);
+				this.drawRect(x - options.width * (barWidth - 1), yFrom, options.width * barWidth, options.height, parent);
 			}
 		}
 	}, {
 		key: "drawSVGText",
 		value: function drawSVGText(parent, options, encoding) {
-			var textElem = document.createElementNS(svgns, 'text');
+			var textElem = this.document.createElementNS(svgns, 'text');
 
 			// Draw the text if displayValue is set
 			if (options.displayValue) {
@@ -1989,7 +2098,7 @@ var SVGRenderer = function () {
 				textElem.setAttribute("x", x);
 				textElem.setAttribute("y", y);
 
-				textElem.appendChild(document.createTextNode(encoding.text));
+				textElem.appendChild(this.document.createTextNode(encoding.text));
 
 				parent.appendChild(textElem);
 			}
@@ -2007,38 +2116,40 @@ var SVGRenderer = function () {
 			svg.setAttribute("xmlns", svgns);
 			svg.setAttribute("version", "1.1");
 
-			svg.style.transform = "translate(0,0)";
+			svg.setAttribute("style", "transform: translate(0,0)");
+		}
+	}, {
+		key: "createGroup",
+		value: function createGroup(x, y, parent) {
+			var group = this.document.createElementNS(svgns, 'g');
+			group.setAttribute("transform", "translate(" + x + ", " + y + ")");
+
+			parent.appendChild(group);
+
+			return group;
+		}
+	}, {
+		key: "setGroupOptions",
+		value: function setGroupOptions(group, options) {
+			group.setAttribute("style", "fill:" + options.lineColor + ";");
+		}
+	}, {
+		key: "drawRect",
+		value: function drawRect(x, y, width, height, parent) {
+			var rect = this.document.createElementNS(svgns, 'rect');
+
+			rect.setAttribute("x", x);
+			rect.setAttribute("y", y);
+			rect.setAttribute("width", width);
+			rect.setAttribute("height", height);
+
+			parent.appendChild(rect);
+
+			return rect;
 		}
 	}]);
 	return SVGRenderer;
 }();
-
-function createGroup(x, y, parent) {
-	var group = document.createElementNS(svgns, 'g');
-
-	group.setAttribute("transform", "translate(" + x + ", " + y + ")");
-
-	parent.appendChild(group);
-
-	return group;
-}
-
-function setGroupOptions(group, options) {
-	group.setAttribute("style", "fill:" + options.lineColor + ";");
-}
-
-function drawRect(x, y, width, height, parent) {
-	var rect = document.createElementNS(svgns, 'rect');
-
-	rect.setAttribute("x", x);
-	rect.setAttribute("y", y);
-	rect.setAttribute("width", width);
-	rect.setAttribute("height", height);
-
-	parent.appendChild(rect);
-
-	return rect;
-}
 
 var ObjectRenderer = function () {
 	function ObjectRenderer(object, encodings, options) {
@@ -2145,7 +2256,7 @@ function getRenderProperties(element) {
 				return newCanvasRenderProperties(element);
 			}
 			// If SVG
-			else if (typeof SVGElement !== 'undefined' && element instanceof SVGElement) {
+			else if (element && element.nodeName === 'svg' || typeof SVGElement !== 'undefined' && element instanceof SVGElement) {
 					return {
 						element: element,
 						options: getOptionsFromElement(element),
@@ -2299,7 +2410,7 @@ function registerBarcode(barcodes$$1, name) {
 			// Ensure text is options.text
 			options.text = typeof options.text === 'undefined' ? undefined : '' + options.text;
 
-			var newOptions = merge$1(api._options, options);
+			var newOptions = merge(api._options, options);
 			newOptions = optionsFromStrings$1(newOptions);
 			var Encoder = barcodes$$1[name];
 			var encoded = encode(text, Encoder, newOptions);
@@ -2332,7 +2443,7 @@ function encode(text, Encoder, options) {
 
 	// Merge
 	for (var i = 0; i < encoded.length; i++) {
-		encoded[i].options = merge$1(options, encoded[i].options);
+		encoded[i].options = merge(options, encoded[i].options);
 	}
 
 	return encoded;
@@ -2351,13 +2462,13 @@ function autoSelectBarcode() {
 // Sets global encoder options
 // Added to the api by the JsBarcode function
 API.prototype.options = function (options) {
-	this._options = merge$1(this._options, options);
+	this._options = merge(this._options, options);
 	return this;
 };
 
 // Will create a blank space (usually in between barcodes)
 API.prototype.blank = function (size) {
-	var zeroes = "0".repeat(size);
+	var zeroes = new Array(size + 1).join("0");
 	this._encodings.push({ data: zeroes });
 	return this;
 };
@@ -2377,7 +2488,7 @@ API.prototype.init = function () {
 	var renderProperty;
 	for (var i in this._renderProperties) {
 		renderProperty = this._renderProperties[i];
-		var options = merge$1(this._options, renderProperty.options);
+		var options = merge(this._options, renderProperty.options);
 
 		if (options.format == "auto") {
 			options.format = autoSelectBarcode();
@@ -2417,7 +2528,7 @@ function render(renderProperties, encodings, options) {
 	encodings = linearizeEncodings$1(encodings);
 
 	for (var i = 0; i < encodings.length; i++) {
-		encodings[i].options = merge$1(options, encodings[i].options);
+		encodings[i].options = merge(options, encodings[i].options);
 		fixOptions$1(encodings[i].options);
 	}
 

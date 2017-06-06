@@ -2,6 +2,8 @@
 
 > Barcode component for [Vue.js](https://vuejs.org/). It is based on [JsBarcode](https://github.com/lindell/JsBarcode).
 
+- [Website](https://xkeshi.github.io/vue-barcode)
+
 
 
 ## Table of contents
@@ -19,10 +21,10 @@
 
 ```
 dist/
-├── vue-barcode.js        (63 KB, UMD)
-├── vue-barcode.min.js    (29 KB, UMD, compressed)
-├── vue-barcode.common.js (63 KB, CommonJS)
-└── vue-barcode.esm.js    (63 KB, ES Module)
+├── vue-barcode.js        (68 KB, UMD)
+├── vue-barcode.min.js    (31 KB, UMD, compressed)
+├── vue-barcode.common.js (67 KB, CommonJS)
+└── vue-barcode.esm.js    (67 KB, ES Module)
 ```
 
 
