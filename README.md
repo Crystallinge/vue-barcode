@@ -4,8 +4,6 @@
 
 - [Website](https://xkeshi.github.io/vue-barcode)
 
-
-
 ## Table of contents
 
 - [Main](#main)
@@ -15,29 +13,23 @@
 - [Versioning](#versioning)
 - [License](#license)
 
-
-
 ## Main
 
-```
+```text
 dist/
-├── vue-barcode.js        (68 KB, UMD)
-├── vue-barcode.min.js    (31 KB, UMD, compressed)
-├── vue-barcode.common.js (67 KB, CommonJS)
-└── vue-barcode.esm.js    (67 KB, ES Module)
+├── vue-barcode.js        (71 KB, UMD)
+├── vue-barcode.min.js    (32 KB, UMD, compressed)
+├── vue-barcode.common.js (71 KB, CommonJS)
+└── vue-barcode.esm.js    (71 KB, ES Module)
 ```
-
-
 
 ## Getting started
 
+### Install
 
-### Download
-
-- [Download the latest release](https://github.com/xkeshi/vue-barcode/archive/master.zip).
-- Clone the repository: `git clone https://github.com/xkeshi/vue-barcode.git`.
-- Install with [NPM](https://npmjs.com): `npm install xkeshi/vue-barcode`.
-
+```bash
+npm install @xkeshi/vue-barcode --save-dev
+```
 
 ### Usage
 
@@ -53,11 +45,7 @@ Vue.component('barcode', VueBarcode);
 <barcode value="Hello, World!" :options="{ displayValue: false }"></barcode>
 ```
 
-
-
 [⬆ back to top](#table-of-contents)
-
-
 
 ## Props
 
@@ -67,13 +55,11 @@ Vue.component('barcode', VueBarcode);
 
 The value of the barcode.
 
-
 ### options
 
 - Type: `Object`
 
 The options for the barcode generator. References the [JsBarcode's options](https://github.com/lindell/JsBarcode#options).
-
 
 ### tag
 
@@ -82,8 +68,6 @@ The options for the barcode generator. References the [JsBarcode's options](http
 - Options: `'canvas'`, `'svg'` and `'img'`
 
 The tag of the component root element.
-
-
 
 ## Browser support
 
@@ -94,16 +78,12 @@ The tag of the component root element.
 - Edge (latest)
 - Internet Explorer 9+
 
-
-
 ## Versioning
 
 Maintained under the [Semantic Versioning guidelines](http://semver.org/).
 
-
-
 ## License
 
-[MIT](http://opensource.org/licenses/MIT) © [xkeshi](http://xkeshi.com)
+[MIT](http://opensource.org/licenses/MIT) © [Xkeshi](http://xkeshi.com)
 
 [⬆ back to top](#table-of-contents)

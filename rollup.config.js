@@ -6,29 +6,28 @@ const pkg = require('./package');
 const now = new Date();
 
 export default {
-  entry: 'src/index.js',
-  targets: [
+  input: 'src/index.js',
+  output: [
     {
-      dest: 'dist/vue-barcode.js',
+      file: 'dist/vue-barcode.js',
+      format: 'umd',
     },
     {
-      dest: 'dist/vue-barcode.common.js',
+      file: 'dist/vue-barcode.common.js',
       format: 'cjs',
     },
     {
-      dest: 'dist/vue-barcode.esm.js',
+      file: 'dist/vue-barcode.esm.js',
       format: 'es',
     },
     {
-      dest: 'docs/js/vue-barcode.js',
+      file: 'docs/js/vue-barcode.js',
+      format: 'umd',
     },
   ],
-  format: 'umd',
-  moduleName: 'VueBarcode',
+  name: 'VueBarcode',
   plugins: [
-    nodeResolve({
-      jsnext: true,
-    }),
+    nodeResolve(),
     commonjs(),
     babel(),
   ],
@@ -36,7 +35,7 @@ export default {
  * vue-barcode v${pkg.version}
  * https://github.com/${pkg.repository}
  *
- * Copyright (c) ${now.getFullYear()} ${pkg.author}
+ * Copyright (c) ${now.getFullYear()} Xkeshi
  * Released under the ${pkg.license} license
  *
  * Date: ${now.toISOString()}

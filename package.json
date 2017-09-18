@@ -1,20 +1,27 @@
 {
-  "name": "vue-barcode",
+  "name": "@xkeshi/vue-barcode",
   "description": "Barcode component for Vue.js.",
   "version": "0.1.1",
   "main": "dist/vue-barcode.common.js",
   "module": "dist/vue-barcode.esm.js",
   "browser": "dist/vue-barcode.js",
   "repository": "xkeshi/vue-barcode",
+  "homepage": "https://xkeshi.github.io/vue-barcode",
   "license": "MIT",
-  "author": "xkeshi",
+  "author": {
+    "name": "Chen Fengyuan",
+    "email": "chenfengyuan@outlook.com",
+    "url": "http://chenfengyuan.com"
+  },
+  "files": [
+    "src",
+    "dist"
+  ],
   "keywords": [
-    "vue",
-    "vuejs",
-    "vue.js",
-    "vue-component",
     "barcode",
+    "vue",
     "component",
+    "vue-component",
     "html",
     "css",
     "javascript",
@@ -27,7 +34,7 @@
     "lint": "eslint ./src",
     "build": "rollup -c",
     "compress": "uglifyjs ./dist/vue-barcode.js -o ./dist/vue-barcode.min.js -c -m --comments /^!/",
-    "prebuild": "npm run lint",
+    "prebuild": "npm run lint --fix",
     "postbuild": "npm run compress",
     "start": "npm run dev"
   },
@@ -35,18 +42,19 @@
     "jsbarcode": "^3.8.0"
   },
   "devDependencies": {
+    "babel-core": "^6.26.0",
     "babel-plugin-external-helpers": "^6.22.0",
-    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-env": "^1.6.0",
     "babel-preset-stage-0": "^6.24.1",
-    "eslint": "^3.19.0",
-    "eslint-config-airbnb-base": "^11.2.0",
-    "eslint-plugin-import": "^2.3.0",
-    "rollup": "^0.42.0",
-    "rollup-plugin-babel": "^2.7.1",
+    "eslint": "^4.7.0",
+    "eslint-config-airbnb-base": "^12.0.0",
+    "eslint-plugin-import": "^2.2.0",
+    "rollup": "^0.50.0",
+    "rollup-plugin-babel": "^3.0.2",
     "rollup-plugin-commonjs": "^8.0.2",
     "rollup-plugin-node-resolve": "^3.0.0",
-    "rollup-watch": "^4.0.0",
-    "uglify-js": "^3.0.15"
+    "rollup-watch": "^4.3.1",
+    "uglify-js": "^3.1.1"
   },
   "peerDependencies": {
     "vue": "^2.2.0"
