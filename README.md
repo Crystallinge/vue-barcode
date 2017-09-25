@@ -27,15 +27,15 @@ dist/
 
 ### Install
 
-```bash
-npm install @xkeshi/vue-barcode --save-dev
+```shell
+npm install @xkeshi/vue-barcode
 ```
 
 ### Usage
 
 - Browser: `window.VueBarcode`
-- CommonJS: `var VueBarcode = require('vue-barcode')`
-- ES2015: `import VueBarcode from 'vue-barcode'`
+- CommonJS: `var VueBarcode = require('@xkeshi/vue-barcode')`
+- ES2015: `import VueBarcode from '@xkeshi/vue-barcode'`
 
 ```js
 Vue.component('barcode', VueBarcode);

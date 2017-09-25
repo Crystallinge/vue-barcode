@@ -1,7 +1,7 @@
 {
   "name": "@xkeshi/vue-barcode",
   "description": "Barcode component for Vue.js.",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "main": "dist/vue-barcode.common.js",
   "module": "dist/vue-barcode.esm.js",
   "browser": "dist/vue-barcode.js",
@@ -10,7 +10,6 @@
   "license": "MIT",
   "author": {
     "name": "Chen Fengyuan",
-    "email": "chenfengyuan@outlook.com",
     "url": "http://chenfengyuan.com"
   },
   "files": [
@@ -46,7 +45,7 @@
     "babel-plugin-external-helpers": "^6.22.0",
     "babel-preset-env": "^1.6.0",
     "babel-preset-stage-0": "^6.24.1",
-    "eslint": "^4.7.0",
+    "eslint": "^4.7.2",
     "eslint-config-airbnb-base": "^12.0.0",
     "eslint-plugin-import": "^2.2.0",
     "rollup": "^0.50.0",
@@ -54,7 +53,7 @@
     "rollup-plugin-commonjs": "^8.0.2",
     "rollup-plugin-node-resolve": "^3.0.0",
     "rollup-watch": "^4.3.1",
-    "uglify-js": "^3.1.1"
+    "uglify-js": "^3.1.2"
   },
   "peerDependencies": {
     "vue": "^2.2.0"
