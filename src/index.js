@@ -6,7 +6,7 @@ export default {
      * The value of the barcode.
      */
     value: {
-      type: [String, Number],
+      type: null,
       required: true,
     },
 
@@ -56,7 +56,7 @@ export default {
      * Generate barcode
      */
     generate() {
-      JsBarcode(this.$el, this.value, this.options);
+      JsBarcode(this.$el, String(this.value), this.options);
     },
   },
 };
