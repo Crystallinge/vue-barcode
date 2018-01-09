@@ -6,7 +6,7 @@ export default {
      * The value of the barcode.
      */
     value: {
-      type: String,
+      type: [String, Number],
       required: true,
     },
 
