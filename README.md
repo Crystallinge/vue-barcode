@@ -1,5 +1,7 @@
 # vue-barcode
 
+[![Downloads](https://img.shields.io/npm/dm/@xkeshi/vue-barcode.svg)](https://www.npmjs.com/package/@xkeshi/vue-barcode) [![Version](https://img.shields.io/npm/v/@xkeshi/vue-barcode.svg)](https://www.npmjs.com/package/@xkeshi/vue-barcode)
+
 > Barcode component for [Vue.js](https://vuejs.org/). It is based on [JsBarcode](https://github.com/lindell/JsBarcode).
 
 - [Website](https://xkeshi.github.io/vue-barcode)
