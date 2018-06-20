@@ -1,11 +1,11 @@
 /*!
- * vue-barcode v0.2.0
- * https://github.com/xkeshi/vue-barcode
+ * vue-barcode v1.0.0
+ * https://xkeshi.github.io/vue-barcode
  *
- * Copyright (c) 2017 Xkeshi
+ * Copyright 2017-present Chen Fengyuan
  * Released under the MIT license
  *
- * Date: 2017-09-25T08:14:37.396Z
+ * Date: 2018-06-20T05:51:52.635Z
  */
 
 'use strict';
@@ -15,127 +15,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 } : function (obj) {
   return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
 };
-
-
-
-
-
-var asyncGenerator = function () {
-  function AwaitValue(value) {
-    this.value = value;
-  }
-
-  function AsyncGenerator(gen) {
-    var front, back;
-
-    function send(key, arg) {
-      return new Promise(function (resolve, reject) {
-        var request = {
-          key: key,
-          arg: arg,
-          resolve: resolve,
-          reject: reject,
-          next: null
-        };
-
-        if (back) {
-          back = back.next = request;
-        } else {
-          front = back = request;
-          resume(key, arg);
-        }
-      });
-    }
-
-    function resume(key, arg) {
-      try {
-        var result = gen[key](arg);
-        var value = result.value;
-
-        if (value instanceof AwaitValue) {
-          Promise.resolve(value.value).then(function (arg) {
-            resume("next", arg);
-          }, function (arg) {
-            resume("throw", arg);
-          });
-        } else {
-          settle(result.done ? "return" : "normal", result.value);
-        }
-      } catch (err) {
-        settle("throw", err);
-      }
-    }
-
-    function settle(type, value) {
-      switch (type) {
-        case "return":
-          front.resolve({
-            value: value,
-            done: true
-          });
-          break;
-
-        case "throw":
-          front.reject(value);
-          break;
-
-        default:
-          front.resolve({
-            value: value,
-            done: false
-          });
-          break;
-      }
-
-      front = front.next;
-
-      if (front) {
-        resume(front.key, front.arg);
-      } else {
-        back = null;
-      }
-    }
-
-    this._invoke = send;
-
-    if (typeof gen.return !== "function") {
-      this.return = undefined;
-    }
-  }
-
-  if (typeof Symbol === "function" && Symbol.asyncIterator) {
-    AsyncGenerator.prototype[Symbol.asyncIterator] = function () {
-      return this;
-    };
-  }
-
-  AsyncGenerator.prototype.next = function (arg) {
-    return this._invoke("next", arg);
-  };
-
-  AsyncGenerator.prototype.throw = function (arg) {
-    return this._invoke("throw", arg);
-  };
-
-  AsyncGenerator.prototype.return = function (arg) {
-    return this._invoke("return", arg);
-  };
-
-  return {
-    wrap: function (fn) {
-      return function () {
-        return new AsyncGenerator(fn.apply(this, arguments));
-      };
-    },
-    await: function (value) {
-      return new AwaitValue(value);
-    }
-  };
-}();
-
-
-
-
 
 var classCallCheck = function (instance, Constructor) {
   if (!(instance instanceof Constructor)) {
@@ -160,10 +39,6 @@ var createClass = function () {
     return Constructor;
   };
 }();
-
-
-
-
 
 var defineProperty = function (obj, key, value) {
   if (key in obj) {
@@ -194,7 +69,30 @@ var _extends = Object.assign || function (target) {
   return target;
 };
 
+var get = function get(object, property, receiver) {
+  if (object === null) object = Function.prototype;
+  var desc = Object.getOwnPropertyDescriptor(object, property);
 
+  if (desc === undefined) {
+    var parent = Object.getPrototypeOf(object);
+
+    if (parent === null) {
+      return undefined;
+    } else {
+      return get(parent, property, receiver);
+    }
+  } else if ("value" in desc) {
+    return desc.value;
+  } else {
+    var getter = desc.get;
+
+    if (getter === undefined) {
+      return undefined;
+    }
+
+    return getter.call(receiver);
+  }
+};
 
 var inherits = function (subClass, superClass) {
   if (typeof superClass !== "function" && superClass !== null) {
@@ -211,16 +109,6 @@ var inherits = function (subClass, superClass) {
   });
   if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
 };
-
-
-
-
-
-
-
-
-
-
 
 var possibleConstructorReturn = function (self, call) {
   if (!self) {
@@ -239,7 +127,6 @@ var Barcode = function Barcode(data, options) {
 };
 
 // Encoding documentation:
-// https://en.wikipedia.org/wiki/Code_39#Encoding
 
 var CODE39 = function (_Barcode) {
 	inherits(CODE39, _Barcode);
@@ -336,6 +223,7 @@ var START_B = 104;
 var START_C = 105;
 var MODULO = 103;
 var STOP = 106;
+var FNC1 = 207;
 
 // Get set by start code
 var SET_BY_CODE = (_SET_BY_CODE = {}, defineProperty(_SET_BY_CODE, START_A, SET_A), defineProperty(_SET_BY_CODE, START_B, SET_B), defineProperty(_SET_BY_CODE, START_C, SET_C), _SET_BY_CODE);
@@ -371,7 +259,7 @@ var BARS = [11011001100, 11001101100, 11001100110, 10010011000, 10010001100, 100
 // This is the master class,
 // it does require the start code to be included in the string
 
-var CODE128$1 = function (_Barcode) {
+var CODE128 = function (_Barcode) {
 	inherits(CODE128, _Barcode);
 
 	function CODE128(data, options) {
@@ -409,6 +297,10 @@ var CODE128$1 = function (_Barcode) {
 				throw new RangeError('The encoding does not start with a start character.');
 			}
 
+			if (this.shouldEncodeAsEan128() === true) {
+				bytes.unshift(FNC1);
+			}
+
 			// Start encode with the right type
 			var encodingResult = CODE128.next(bytes, 1, startSet);
 
@@ -424,6 +316,18 @@ var CODE128$1 = function (_Barcode) {
 				// Add the end bits
 				CODE128.getBar(STOP)
 			};
+		}
+
+		// GS1-128/EAN-128
+
+	}, {
+		key: 'shouldEncodeAsEan128',
+		value: function shouldEncodeAsEan128() {
+			var isEAN128 = this.options.ean128 || false;
+			if (typeof isEAN128 === 'string') {
+				isEAN128 = isEAN128.toLowerCase() === 'true';
+			}
+			return isEAN128;
 		}
 
 		// Get a bar symbol by index
@@ -577,7 +481,7 @@ var CODE128AUTO = function (_CODE) {
 	}
 
 	return CODE128AUTO;
-}(CODE128$1);
+}(CODE128);
 
 var CODE128A = function (_CODE) {
 	inherits(CODE128A, _CODE);
@@ -594,7 +498,7 @@ var CODE128A = function (_CODE) {
 		}
 	}]);
 	return CODE128A;
-}(CODE128$1);
+}(CODE128);
 
 var CODE128B = function (_CODE) {
 	inherits(CODE128B, _CODE);
@@ -611,7 +515,7 @@ var CODE128B = function (_CODE) {
 		}
 	}]);
 	return CODE128B;
-}(CODE128$1);
+}(CODE128);
 
 var CODE128C = function (_CODE) {
 	inherits(CODE128C, _CODE);
@@ -628,71 +532,133 @@ var CODE128C = function (_CODE) {
 		}
 	}]);
 	return CODE128C;
-}(CODE128$1);
+}(CODE128);
 
-var EANencoder = function () {
-	function EANencoder() {
-		classCallCheck(this, EANencoder);
+// Standard start end and middle bits
+var SIDE_BIN = '101';
+var MIDDLE_BIN = '01010';
 
-		// Standard start end and middle bits
-		this.startBin = "101";
-		this.endBin = "101";
-		this.middleBin = "01010";
+var BINARIES = {
+	'L': [// The L (left) type of encoding
+	'0001101', '0011001', '0010011', '0111101', '0100011', '0110001', '0101111', '0111011', '0110111', '0001011'],
+	'G': [// The G type of encoding
+	'0100111', '0110011', '0011011', '0100001', '0011101', '0111001', '0000101', '0010001', '0001001', '0010111'],
+	'R': [// The R (right) type of encoding
+	'1110010', '1100110', '1101100', '1000010', '1011100', '1001110', '1010000', '1000100', '1001000', '1110100'],
+	'O': [// The O (odd) encoding for UPC-E
+	'0001101', '0011001', '0010011', '0111101', '0100011', '0110001', '0101111', '0111011', '0110111', '0001011'],
+	'E': [// The E (even) encoding for UPC-E
+	'0100111', '0110011', '0011011', '0100001', '0011101', '0111001', '0000101', '0010001', '0001001', '0010111']
+};
 
-		this.binaries = {
-			// The L (left) type of encoding
-			"L": ["0001101", "0011001", "0010011", "0111101", "0100011", "0110001", "0101111", "0111011", "0110111", "0001011"],
+// Define the EAN-2 structure
+var EAN2_STRUCTURE = ['LL', 'LG', 'GL', 'GG'];
 
-			// The G type of encoding
-			"G": ["0100111", "0110011", "0011011", "0100001", "0011101", "0111001", "0000101", "0010001", "0001001", "0010111"],
+// Define the EAN-5 structure
+var EAN5_STRUCTURE = ['GGLLL', 'GLGLL', 'GLLGL', 'GLLLG', 'LGGLL', 'LLGGL', 'LLLGG', 'LGLGL', 'LGLLG', 'LLGLG'];
 
-			// The R (right) type of encoding
-			"R": ["1110010", "1100110", "1101100", "1000010", "1011100", "1001110", "1010000", "1000100", "1001000", "1110100"],
+// Define the EAN-13 structure
+var EAN13_STRUCTURE = ['LLLLLL', 'LLGLGG', 'LLGGLG', 'LLGGGL', 'LGLLGG', 'LGGLLG', 'LGGGLL', 'LGLGLG', 'LGLGGL', 'LGGLGL'];
 
-			// The O (odd) encoding for UPC-E
-			"O": ["0001101", "0011001", "0010011", "0111101", "0100011", "0110001", "0101111", "0111011", "0110111", "0001011"],
+// Encode data string
+var encode = function encode(data, structure, separator) {
+	var encoded = data.split('').map(function (val, idx) {
+		return BINARIES[structure[idx]];
+	}).map(function (val, idx) {
+		return val ? val[data[idx]] : '';
+	});
 
-			// The E (even) encoding for UPC-E
-			"E": ["0100111", "0110011", "0011011", "0100001", "0011101", "0111001", "0000101", "0010001", "0001001", "0010111"]
-		};
+	if (separator) {
+		var last = data.length - 1;
+		encoded = encoded.map(function (val, idx) {
+			return idx < last ? val + separator : val;
+		});
 	}
 
-	// Convert a numberarray to the representing
+	return encoded.join('');
+};
 
+// Base class for EAN8 & EAN13
 
-	createClass(EANencoder, [{
-		key: "encode",
-		value: function encode(number, structure, separator) {
-			// Create the variable that should be returned at the end of the function
-			var result = "";
+var EAN = function (_Barcode) {
+	inherits(EAN, _Barcode);
 
-			// Make sure that the separator is set
-			separator = separator || "";
+	function EAN(data, options) {
+		classCallCheck(this, EAN);
 
-			// Loop all the numbers
-			for (var i = 0; i < number.length; i++) {
-				// Using the L, G or R encoding and add it to the returning variable
-				var binary = this.binaries[structure[i]];
-				if (binary) {
-					result += binary[number[i]];
-				}
+		// Make sure the font is not bigger than the space between the guard bars
+		var _this = possibleConstructorReturn(this, (EAN.__proto__ || Object.getPrototypeOf(EAN)).call(this, data, options));
 
-				// Add separator in between encodings
-				if (i < number.length - 1) {
-					result += separator;
-				}
-			}
-			return result;
+		_this.fontSize = !options.flat && options.fontSize > options.width * 10 ? options.width * 10 : options.fontSize;
+
+		// Make the guard bars go down half the way of the text
+		_this.guardHeight = options.height + _this.fontSize / 2 + options.textMargin;
+		return _this;
+	}
+
+	createClass(EAN, [{
+		key: 'encode',
+		value: function encode$$1() {
+			return this.options.flat ? this.encodeFlat() : this.encodeGuarded();
+		}
+	}, {
+		key: 'leftText',
+		value: function leftText(from, to) {
+			return this.text.substr(from, to);
+		}
+	}, {
+		key: 'leftEncode',
+		value: function leftEncode(data, structure) {
+			return encode(data, structure);
+		}
+	}, {
+		key: 'rightText',
+		value: function rightText(from, to) {
+			return this.text.substr(from, to);
+		}
+	}, {
+		key: 'rightEncode',
+		value: function rightEncode(data, structure) {
+			return encode(data, structure);
+		}
+	}, {
+		key: 'encodeGuarded',
+		value: function encodeGuarded() {
+			var textOptions = { fontSize: this.fontSize };
+			var guardOptions = { height: this.guardHeight };
+
+			return [{ data: SIDE_BIN, options: guardOptions }, { data: this.leftEncode(), text: this.leftText(), options: textOptions }, { data: MIDDLE_BIN, options: guardOptions }, { data: this.rightEncode(), text: this.rightText(), options: textOptions }, { data: SIDE_BIN, options: guardOptions }];
+		}
+	}, {
+		key: 'encodeFlat',
+		value: function encodeFlat() {
+			var data = [SIDE_BIN, this.leftEncode(), MIDDLE_BIN, this.rightEncode(), SIDE_BIN];
+
+			return {
+				data: data.join(''),
+				text: this.text
+			};
 		}
 	}]);
-	return EANencoder;
-}();
+	return EAN;
+}(Barcode);
 
 // Encoding documentation:
-// https://en.wikipedia.org/wiki/International_Article_Number_(EAN)#Binary_encoding_of_data_digits_into_EAN-13_barcode
 
-var EAN13 = function (_Barcode) {
-	inherits(EAN13, _Barcode);
+// Calculate the checksum digit
+// https://en.wikipedia.org/wiki/International_Article_Number_(EAN)#Calculation_of_checksum_digit
+var checksum = function checksum(number) {
+	var res = number.substr(0, 12).split('').map(function (n) {
+		return +n;
+	}).reduce(function (sum, a, idx) {
+		return idx % 2 ? sum + a * 3 : sum + a;
+	}, 0);
+
+	return (10 - res % 10) % 10;
+};
+
+var EAN13 = function (_EAN) {
+	inherits(EAN13, _EAN);
 
 	function EAN13(data, options) {
 		classCallCheck(this, EAN13);
@@ -702,160 +668,90 @@ var EAN13 = function (_Barcode) {
 			data += checksum(data);
 		}
 
-		// Make sure the font is not bigger than the space between the guard bars
+		// Adds a last character to the end of the barcode
 		var _this = possibleConstructorReturn(this, (EAN13.__proto__ || Object.getPrototypeOf(EAN13)).call(this, data, options));
 
-		if (!options.flat && options.fontSize > options.width * 10) {
-			_this.fontSize = options.width * 10;
-		} else {
-			_this.fontSize = options.fontSize;
-		}
-
-		// Make the guard bars go down half the way of the text
-		_this.guardHeight = options.height + _this.fontSize / 2 + options.textMargin;
-
-		// Adds a last character to the end of the barcode
 		_this.lastChar = options.lastChar;
 		return _this;
 	}
 
 	createClass(EAN13, [{
-		key: "valid",
+		key: 'valid',
 		value: function valid() {
-			return this.data.search(/^[0-9]{13}$/) !== -1 && this.data[12] == checksum(this.data);
+			return this.data.search(/^[0-9]{13}$/) !== -1 && +this.data[12] === checksum(this.data);
 		}
 	}, {
-		key: "encode",
-		value: function encode() {
-			if (this.options.flat) {
-				return this.flatEncoding();
-			} else {
-				return this.guardedEncoding();
-			}
+		key: 'leftText',
+		value: function leftText() {
+			return get(EAN13.prototype.__proto__ || Object.getPrototypeOf(EAN13.prototype), 'leftText', this).call(this, 1, 6);
 		}
-
-		// Define the EAN-13 structure
-
 	}, {
-		key: "getStructure",
-		value: function getStructure() {
-			return ["LLLLLL", "LLGLGG", "LLGGLG", "LLGGGL", "LGLLGG", "LGGLLG", "LGGGLL", "LGLGLG", "LGLGGL", "LGGLGL"];
+		key: 'leftEncode',
+		value: function leftEncode() {
+			var data = this.data.substr(1, 6);
+			var structure = EAN13_STRUCTURE[this.data[0]];
+			return get(EAN13.prototype.__proto__ || Object.getPrototypeOf(EAN13.prototype), 'leftEncode', this).call(this, data, structure);
+		}
+	}, {
+		key: 'rightText',
+		value: function rightText() {
+			return get(EAN13.prototype.__proto__ || Object.getPrototypeOf(EAN13.prototype), 'rightText', this).call(this, 7, 6);
+		}
+	}, {
+		key: 'rightEncode',
+		value: function rightEncode() {
+			var data = this.data.substr(7, 6);
+			return get(EAN13.prototype.__proto__ || Object.getPrototypeOf(EAN13.prototype), 'rightEncode', this).call(this, data, 'RRRRRR');
 		}
 
 		// The "standard" way of printing EAN13 barcodes with guard bars
 
 	}, {
-		key: "guardedEncoding",
-		value: function guardedEncoding() {
-			var encoder = new EANencoder();
-			var result = [];
+		key: 'encodeGuarded',
+		value: function encodeGuarded() {
+			var data = get(EAN13.prototype.__proto__ || Object.getPrototypeOf(EAN13.prototype), 'encodeGuarded', this).call(this);
 
-			var structure = this.getStructure()[this.data[0]];
-
-			// Get the string to be encoded on the left side of the EAN code
-			var leftSide = this.data.substr(1, 6);
-
-			// Get the string to be encoded on the right side of the EAN code
-			var rightSide = this.data.substr(7, 6);
-
-			// Add the first digigt
+			// Extend data with left digit & last character
 			if (this.options.displayValue) {
-				result.push({
-					data: "000000000000",
+				data.unshift({
+					data: '000000000000',
 					text: this.text.substr(0, 1),
-					options: { textAlign: "left", fontSize: this.fontSize }
+					options: { textAlign: 'left', fontSize: this.fontSize }
 				});
+
+				if (this.options.lastChar) {
+					data.push({
+						data: '00'
+					});
+					data.push({
+						data: '00000',
+						text: this.options.lastChar,
+						options: { fontSize: this.fontSize }
+					});
+				}
 			}
 
-			// Add the guard bars
-			result.push({
-				data: "101",
-				options: { height: this.guardHeight }
-			});
-
-			// Add the left side
-			result.push({
-				data: encoder.encode(leftSide, structure),
-				text: this.text.substr(1, 6),
-				options: { fontSize: this.fontSize }
-			});
-
-			// Add the middle bits
-			result.push({
-				data: "01010",
-				options: { height: this.guardHeight }
-			});
-
-			// Add the right side
-			result.push({
-				data: encoder.encode(rightSide, "RRRRRR"),
-				text: this.text.substr(7, 6),
-				options: { fontSize: this.fontSize }
-			});
-
-			// Add the end bits
-			result.push({
-				data: "101",
-				options: { height: this.guardHeight }
-			});
-
-			if (this.options.lastChar && this.options.displayValue) {
-				result.push({ data: "00" });
-
-				result.push({
-					data: "00000",
-					text: this.options.lastChar,
-					options: { fontSize: this.fontSize }
-				});
-			}
-			return result;
-		}
-	}, {
-		key: "flatEncoding",
-		value: function flatEncoding() {
-			var encoder = new EANencoder();
-			var result = "";
-
-			var structure = this.getStructure()[this.data[0]];
-
-			result += "101";
-			result += encoder.encode(this.data.substr(1, 6), structure);
-			result += "01010";
-			result += encoder.encode(this.data.substr(7, 6), "RRRRRR");
-			result += "101";
-
-			return {
-				data: result,
-				text: this.text
-			};
+			return data;
 		}
 	}]);
 	return EAN13;
-}(Barcode);
-
-// Calulate the checksum digit
-// https://en.wikipedia.org/wiki/International_Article_Number_(EAN)#Calculation_of_checksum_digit
-
-
-function checksum(number) {
-	var result = 0;
-
-	var i;
-	for (i = 0; i < 12; i += 2) {
-		result += parseInt(number[i]);
-	}
-	for (i = 1; i < 12; i += 2) {
-		result += parseInt(number[i]) * 3;
-	}
-
-	return (10 - result % 10) % 10;
-}
+}(EAN);
 
 // Encoding documentation:
-// http://www.barcodeisland.com/ean8.phtml
 
-var EAN8 = function (_Barcode) {
-	inherits(EAN8, _Barcode);
+// Calculate the checksum digit
+var checksum$1 = function checksum(number) {
+	var res = number.substr(0, 7).split('').map(function (n) {
+		return +n;
+	}).reduce(function (sum, a, idx) {
+		return idx % 2 ? sum + a : sum + a * 3;
+	}, 0);
+
+	return (10 - res % 10) % 10;
+};
+
+var EAN8 = function (_EAN) {
+	inherits(EAN8, _EAN);
 
 	function EAN8(data, options) {
 		classCallCheck(this, EAN8);
@@ -869,157 +765,96 @@ var EAN8 = function (_Barcode) {
 	}
 
 	createClass(EAN8, [{
-		key: "valid",
+		key: 'valid',
 		value: function valid() {
-			return this.data.search(/^[0-9]{8}$/) !== -1 && this.data[7] == checksum$1(this.data);
+			return this.data.search(/^[0-9]{8}$/) !== -1 && +this.data[7] === checksum$1(this.data);
 		}
 	}, {
-		key: "encode",
-		value: function encode() {
-			var encoder = new EANencoder();
-
-			// Create the return variable
-			var result = "";
-
-			// Get the number to be encoded on the left side of the EAN code
-			var leftSide = this.data.substr(0, 4);
-
-			// Get the number to be encoded on the right side of the EAN code
-			var rightSide = this.data.substr(4, 4);
-
-			// Add the start bits
-			result += encoder.startBin;
-
-			// Add the left side
-			result += encoder.encode(leftSide, "LLLL");
-
-			// Add the middle bits
-			result += encoder.middleBin;
-
-			// Add the right side
-			result += encoder.encode(rightSide, "RRRR");
-
-			// Add the end bits
-			result += encoder.endBin;
-
-			return {
-				data: result,
-				text: this.text
-			};
+		key: 'leftText',
+		value: function leftText() {
+			return get(EAN8.prototype.__proto__ || Object.getPrototypeOf(EAN8.prototype), 'leftText', this).call(this, 0, 4);
+		}
+	}, {
+		key: 'leftEncode',
+		value: function leftEncode() {
+			var data = this.data.substr(0, 4);
+			return get(EAN8.prototype.__proto__ || Object.getPrototypeOf(EAN8.prototype), 'leftEncode', this).call(this, data, 'LLLL');
+		}
+	}, {
+		key: 'rightText',
+		value: function rightText() {
+			return get(EAN8.prototype.__proto__ || Object.getPrototypeOf(EAN8.prototype), 'rightText', this).call(this, 4, 4);
+		}
+	}, {
+		key: 'rightEncode',
+		value: function rightEncode() {
+			var data = this.data.substr(4, 4);
+			return get(EAN8.prototype.__proto__ || Object.getPrototypeOf(EAN8.prototype), 'rightEncode', this).call(this, data, 'RRRR');
 		}
 	}]);
 	return EAN8;
-}(Barcode);
-
-// Calulate the checksum digit
-
-
-function checksum$1(number) {
-	var result = 0;
-
-	var i;
-	for (i = 0; i < 7; i += 2) {
-		result += parseInt(number[i]) * 3;
-	}
-
-	for (i = 1; i < 7; i += 2) {
-		result += parseInt(number[i]);
-	}
-
-	return (10 - result % 10) % 10;
-}
+}(EAN);
 
 // Encoding documentation:
-// https://en.wikipedia.org/wiki/EAN_5#Encoding
+
+var checksum$2 = function checksum(data) {
+	var result = data.split('').map(function (n) {
+		return +n;
+	}).reduce(function (sum, a, idx) {
+		return idx % 2 ? sum + a * 9 : sum + a * 3;
+	}, 0);
+	return result % 10;
+};
 
 var EAN5 = function (_Barcode) {
 	inherits(EAN5, _Barcode);
 
 	function EAN5(data, options) {
 		classCallCheck(this, EAN5);
-
-		// Define the EAN-13 structure
-		var _this = possibleConstructorReturn(this, (EAN5.__proto__ || Object.getPrototypeOf(EAN5)).call(this, data, options));
-
-		_this.structure = ["GGLLL", "GLGLL", "GLLGL", "GLLLG", "LGGLL", "LLGGL", "LLLGG", "LGLGL", "LGLLG", "LLGLG"];
-		return _this;
+		return possibleConstructorReturn(this, (EAN5.__proto__ || Object.getPrototypeOf(EAN5)).call(this, data, options));
 	}
 
 	createClass(EAN5, [{
-		key: "valid",
+		key: 'valid',
 		value: function valid() {
 			return this.data.search(/^[0-9]{5}$/) !== -1;
 		}
 	}, {
-		key: "encode",
-		value: function encode() {
-			var encoder = new EANencoder();
-			var checksum = this.checksum();
-
-			// Start bits
-			var result = "1011";
-
-			// Use normal ean encoding with 01 in between all digits
-			result += encoder.encode(this.data, this.structure[checksum], "01");
-
+		key: 'encode',
+		value: function encode$$1() {
+			var structure = EAN5_STRUCTURE[checksum$2(this.data)];
 			return {
-				data: result,
+				data: '1011' + encode(this.data, structure, '01'),
 				text: this.text
 			};
-		}
-	}, {
-		key: "checksum",
-		value: function checksum() {
-			var result = 0;
-
-			result += parseInt(this.data[0]) * 3;
-			result += parseInt(this.data[1]) * 9;
-			result += parseInt(this.data[2]) * 3;
-			result += parseInt(this.data[3]) * 9;
-			result += parseInt(this.data[4]) * 3;
-
-			return result % 10;
 		}
 	}]);
 	return EAN5;
 }(Barcode);
 
 // Encoding documentation:
-// https://en.wikipedia.org/wiki/EAN_2#Encoding
 
 var EAN2 = function (_Barcode) {
 	inherits(EAN2, _Barcode);
 
 	function EAN2(data, options) {
 		classCallCheck(this, EAN2);
-
-		var _this = possibleConstructorReturn(this, (EAN2.__proto__ || Object.getPrototypeOf(EAN2)).call(this, data, options));
-
-		_this.structure = ["LL", "LG", "GL", "GG"];
-		return _this;
+		return possibleConstructorReturn(this, (EAN2.__proto__ || Object.getPrototypeOf(EAN2)).call(this, data, options));
 	}
 
 	createClass(EAN2, [{
-		key: "valid",
+		key: 'valid',
 		value: function valid() {
 			return this.data.search(/^[0-9]{2}$/) !== -1;
 		}
 	}, {
-		key: "encode",
-		value: function encode() {
-			var encoder = new EANencoder();
-
+		key: 'encode',
+		value: function encode$$1() {
 			// Choose the structure based on the number mod 4
-			var structure = this.structure[parseInt(this.data) % 4];
-
-			// Start bits
-			var result = "1011";
-
-			// Encode the two digits with 01 in between
-			result += encoder.encode(this.data, structure, "01");
-
+			var structure = EAN2_STRUCTURE[parseInt(this.data) % 4];
 			return {
-				data: result,
+				// Start bits + Encode the two digits with 01 in between
+				data: '1011' + encode(this.data, structure, '01'),
 				text: this.text
 			};
 		}
@@ -1028,7 +863,6 @@ var EAN2 = function (_Barcode) {
 }(Barcode);
 
 // Encoding documentation:
-// https://en.wikipedia.org/wiki/Universal_Product_Code#Encoding
 
 var UPC = function (_Barcode) {
 	inherits(UPC, _Barcode);
@@ -1038,7 +872,7 @@ var UPC = function (_Barcode) {
 
 		// Add checksum if it does not exist
 		if (data.search(/^[0-9]{11}$/) !== -1) {
-			data += checksum$2(data);
+			data += checksum$3(data);
 		}
 
 		var _this = possibleConstructorReturn(this, (UPC.__proto__ || Object.getPrototypeOf(UPC)).call(this, data, options));
@@ -1060,11 +894,11 @@ var UPC = function (_Barcode) {
 	createClass(UPC, [{
 		key: "valid",
 		value: function valid() {
-			return this.data.search(/^[0-9]{12}$/) !== -1 && this.data[11] == checksum$2(this.data);
+			return this.data.search(/^[0-9]{12}$/) !== -1 && this.data[11] == checksum$3(this.data);
 		}
 	}, {
 		key: "encode",
-		value: function encode() {
+		value: function encode$$1() {
 			if (this.options.flat) {
 				return this.flatEncoding();
 			} else {
@@ -1074,13 +908,12 @@ var UPC = function (_Barcode) {
 	}, {
 		key: "flatEncoding",
 		value: function flatEncoding() {
-			var encoder = new EANencoder();
 			var result = "";
 
 			result += "101";
-			result += encoder.encode(this.data.substr(0, 6), "LLLLLL");
+			result += encode(this.data.substr(0, 6), "LLLLLL");
 			result += "01010";
-			result += encoder.encode(this.data.substr(6, 6), "RRRRRR");
+			result += encode(this.data.substr(6, 6), "RRRRRR");
 			result += "101";
 
 			return {
@@ -1091,7 +924,6 @@ var UPC = function (_Barcode) {
 	}, {
 		key: "guardedEncoding",
 		value: function guardedEncoding() {
-			var encoder = new EANencoder();
 			var result = [];
 
 			// Add the first digit
@@ -1105,13 +937,13 @@ var UPC = function (_Barcode) {
 
 			// Add the guard bars
 			result.push({
-				data: "101" + encoder.encode(this.data[0], "L"),
+				data: "101" + encode(this.data[0], "L"),
 				options: { height: this.guardHeight }
 			});
 
 			// Add the left side
 			result.push({
-				data: encoder.encode(this.data.substr(1, 5), "LLLLL"),
+				data: encode(this.data.substr(1, 5), "LLLLL"),
 				text: this.text.substr(1, 5),
 				options: { fontSize: this.fontSize }
 			});
@@ -1124,14 +956,14 @@ var UPC = function (_Barcode) {
 
 			// Add the right side
 			result.push({
-				data: encoder.encode(this.data.substr(6, 5), "RRRRR"),
+				data: encode(this.data.substr(6, 5), "RRRRR"),
 				text: this.text.substr(6, 5),
 				options: { fontSize: this.fontSize }
 			});
 
 			// Add the end bits
 			result.push({
-				data: encoder.encode(this.data[11], "R") + "101",
+				data: encode(this.data[11], "R") + "101",
 				options: { height: this.guardHeight }
 			});
 
@@ -1154,7 +986,7 @@ var UPC = function (_Barcode) {
 // https://en.wikipedia.org/wiki/International_Article_Number_(EAN)#Calculation_of_checksum_digit
 
 
-function checksum$2(number) {
+function checksum$3(number) {
 	var result = 0;
 
 	var i;
@@ -1169,10 +1001,6 @@ function checksum$2(number) {
 }
 
 // Encoding documentation:
-// https://en.wikipedia.org/wiki/Universal_Product_Code#Encoding
-//
-// UPC-E documentation:
-// https://en.wikipedia.org/wiki/Universal_Product_Code#UPC-E
 
 var EXPANSIONS = ["XX00000XXX", "XX10000XXX", "XX20000XXX", "XXX00000XX", "XXXX00000X", "XXXXX00005", "XXXXX00006", "XXXXX00007", "XXXXX00008", "XXXXX00009"];
 
@@ -1231,7 +1059,7 @@ var UPCE = function (_Barcode) {
 		}
 	}, {
 		key: 'encode',
-		value: function encode() {
+		value: function encode$$1() {
 			if (this.options.flat) {
 				return this.flatEncoding();
 			} else {
@@ -1241,11 +1069,10 @@ var UPCE = function (_Barcode) {
 	}, {
 		key: 'flatEncoding',
 		value: function flatEncoding() {
-			var encoder = new EANencoder();
 			var result = "";
 
 			result += "101";
-			result += this.encodeMiddleDigits(encoder);
+			result += this.encodeMiddleDigits();
 			result += "010101";
 
 			return {
@@ -1256,7 +1083,6 @@ var UPCE = function (_Barcode) {
 	}, {
 		key: 'guardedEncoding',
 		value: function guardedEncoding() {
-			var encoder = new EANencoder();
 			var result = [];
 
 			// Add the UPC-A number system digit beneath the quiet zone
@@ -1276,7 +1102,7 @@ var UPCE = function (_Barcode) {
 
 			// Add the 6 UPC-E digits
 			result.push({
-				data: this.encodeMiddleDigits(encoder),
+				data: this.encodeMiddleDigits(),
 				text: this.text.substring(1, 7),
 				options: { fontSize: this.fontSize }
 			});
@@ -1300,11 +1126,11 @@ var UPCE = function (_Barcode) {
 		}
 	}, {
 		key: 'encodeMiddleDigits',
-		value: function encodeMiddleDigits(encoder) {
+		value: function encodeMiddleDigits() {
 			var numberSystem = this.upcA[0];
 			var checkDigit = this.upcA[this.upcA.length - 1];
 			var parity = PARITIES[parseInt(checkDigit)][parseInt(numberSystem)];
-			return encoder.encode(this.middleDigits, parity);
+			return encode(this.middleDigits, parity);
 		}
 	}]);
 	return UPCE;
@@ -1326,7 +1152,7 @@ function expandToUPCA(middleDigits, numberSystem) {
 	}
 
 	result = '' + numberSystem + result;
-	return '' + result + checksum$2(result);
+	return '' + result + checksum$3(result);
 }
 
 var ITF14 = function (_Barcode) {
@@ -1337,7 +1163,7 @@ var ITF14 = function (_Barcode) {
 
 		// Add checksum if it does not exist
 		if (data.search(/^[0-9]{13}$/) !== -1) {
-			data += checksum$3(data);
+			data += checksum$4(data);
 		}
 
 		var _this = possibleConstructorReturn(this, (ITF14.__proto__ || Object.getPrototypeOf(ITF14)).call(this, data, options));
@@ -1360,7 +1186,7 @@ var ITF14 = function (_Barcode) {
 	createClass(ITF14, [{
 		key: "valid",
 		value: function valid() {
-			return this.data.search(/^[0-9]{14}$/) !== -1 && this.data[13] == checksum$3(this.data);
+			return this.data.search(/^[0-9]{14}$/) !== -1 && this.data[13] == checksum$4(this.data);
 		}
 	}, {
 		key: "encode",
@@ -1406,7 +1232,7 @@ var ITF14 = function (_Barcode) {
 // Calulate the checksum digit
 
 
-function checksum$3(data) {
+function checksum$4(data) {
 	var result = 0;
 
 	for (var i = 0; i < 13; i++) {
@@ -1487,7 +1313,6 @@ var ITF = function (_Barcode) {
 }(Barcode);
 
 // Encoding documentation
-// https://en.wikipedia.org/wiki/MSI_Barcode#Character_set_and_binary_lookup
 
 var MSI = function (_Barcode) {
 	inherits(MSI, _Barcode);
@@ -1613,7 +1438,6 @@ var MSI1110 = function (_MSI) {
 }(MSI);
 
 // Encoding documentation
-// http://www.gomaro.ch/ftproot/Laetus_PHARMA-CODE.pdf
 
 var pharmacode = function (_Barcode) {
 	inherits(pharmacode, _Barcode);
@@ -1665,7 +1489,6 @@ var pharmacode = function (_Barcode) {
 }(Barcode);
 
 // Encoding specification:
-// http://www.barcodeisland.com/codabar.phtml
 
 var codabar = function (_Barcode) {
 	inherits(codabar, _Barcode);
@@ -1726,8 +1549,8 @@ var codabar = function (_Barcode) {
 				".": "1101101101",
 				"+": "101100110011",
 				"A": "1011001001",
-				"B": "1010010011",
-				"C": "1001001011",
+				"B": "1001001011",
+				"C": "1010010011",
 				"D": "1010011001"
 			};
 		}
@@ -1784,7 +1607,7 @@ var merge = (function (old, replaceObj) {
 
 // Encodings can be nestled like [[1-1, 1-2], 2, [3-1, 3-2]
 // Convert to [1-1, 1-2, 2, 3-1, 3-2]
-function linearizeEncodings$1(encodings) {
+function linearizeEncodings(encodings) {
 	var linearEncodings = [];
 	function nextLevel(encoded) {
 		if (Array.isArray(encoded)) {
@@ -1802,7 +1625,7 @@ function linearizeEncodings$1(encodings) {
 	return linearEncodings;
 }
 
-function fixOptions$1(options) {
+function fixOptions(options) {
 	// Fix the margins
 	options.marginTop = options.marginTop || options.margin;
 	options.marginBottom = options.marginBottom || options.margin;
@@ -1813,7 +1636,7 @@ function fixOptions$1(options) {
 }
 
 // Convert string to integers/booleans where it should be
-function optionsFromStrings$1(options) {
+function optionsFromStrings(options) {
 	var intOptions = ["width", "height", "textMargin", "fontSize", "margin", "marginTop", "marginBottom", "marginLeft", "marginRight"];
 
 	for (var intOption in intOptions) {
@@ -1873,7 +1696,7 @@ function getOptionsFromElement(element) {
 	options["value"] = element.getAttribute("jsbarcode-value") || element.getAttribute("data-value");
 
 	// Since all atributes are string they need to be converted to integers
-	options = optionsFromStrings$1(options);
+	options = optionsFromStrings(options);
 
 	return options;
 }
@@ -2335,8 +2158,6 @@ var NoElementException = function (_Error3) {
 }(Error);
 
 /* global HTMLImageElement */
-/* global HTMLCanvasElement */
-/* global SVGElement */
 
 // Takes an element and returns an object with information about how
 // it should be rendered
@@ -2466,9 +2287,7 @@ var ErrorHandler = function () {
 }();
 
 // Import all the barcodes
-// Help functions
-// Exceptions
-// Default values
+
 // The protype of the object returned from the JsBarcode() call
 var API = function API() {};
 
@@ -2522,9 +2341,9 @@ function registerBarcode(barcodes$$1, name) {
 			options.text = typeof options.text === 'undefined' ? undefined : '' + options.text;
 
 			var newOptions = merge(api._options, options);
-			newOptions = optionsFromStrings$1(newOptions);
+			newOptions = optionsFromStrings(newOptions);
 			var Encoder = barcodes$$1[name];
-			var encoded = encode(text, Encoder, newOptions);
+			var encoded = encode$1(text, Encoder, newOptions);
 			api._encodings.push(encoded);
 
 			return api;
@@ -2533,7 +2352,7 @@ function registerBarcode(barcodes$$1, name) {
 }
 
 // encode() handles the Encoder call and builds the binary string to be rendered
-function encode(text, Encoder, options) {
+function encode$1(text, Encoder, options) {
 	// Ensure that text is a string
 	text = "" + text;
 
@@ -2550,7 +2369,7 @@ function encode(text, Encoder, options) {
 
 	// Encodings can be nestled like [[1-1, 1-2], 2, [3-1, 3-2]
 	// Convert to [1-1, 1-2, 2, 3-1, 3-2]
-	encoded = linearizeEncodings$1(encoded);
+	encoded = linearizeEncodings(encoded);
 
 	// Merge
 	for (var i = 0; i < encoded.length; i++) {
@@ -2608,7 +2427,7 @@ API.prototype.init = function () {
 		this._errorHandler.wrapBarcodeCall(function () {
 			var text = options.value;
 			var Encoder = barcodes[options.format.toUpperCase()];
-			var encoded = encode(text, Encoder, options);
+			var encoded = encode$1(text, Encoder, options);
 
 			render(renderProperty, encoded, options);
 		});
@@ -2636,14 +2455,14 @@ API.prototype._defaults = defaults$1;
 
 // Prepares the encodings and calls the renderer
 function render(renderProperties, encodings, options) {
-	encodings = linearizeEncodings$1(encodings);
+	encodings = linearizeEncodings(encodings);
 
 	for (var i = 0; i < encodings.length; i++) {
 		encodings[i].options = merge(options, encodings[i].options);
-		fixOptions$1(encodings[i].options);
+		fixOptions(encodings[i].options);
 	}
 
-	fixOptions$1(options);
+	fixOptions(options);
 
 	var Renderer = renderProperties.renderer;
 	var renderer = new Renderer(renderProperties.element, encodings, options);
@@ -2672,29 +2491,29 @@ if (typeof jQuery !== 'undefined') {
 }
 
 var index = {
-  props: {
-    /*
-     * The value of the barcode.
-     */
-    value: {
-      type: String,
-      required: true
-    },
+  name: 'barcode',
 
-    /*
-     * The options for the barcode generator.
+  props: {
+    /**
+     * The options for the bar code generator.
      * {@link https://github.com/lindell/JsBarcode#options}
      */
-    options: {
-      type: Object
-    },
+    options: Object,
 
-    /*
+    /**
      * The tag of the component root element.
      */
     tag: {
       type: String,
       default: 'canvas'
+    },
+
+    /**
+     * The value of the bar code.
+     */
+    value: {
+      type: null,
+      default: ''
     }
   },
 
@@ -2704,34 +2523,35 @@ var index = {
 
 
   watch: {
-    /*
-     * Update barcode when value change
+    /**
+     * Update bar code when value change.
      */
     value: function value() {
       this.generate();
     },
 
 
-    /*
-     * Update barcode when options change
+    /**
+     * Update bar code when options change.
      */
     options: function options() {
       this.generate();
     }
   },
 
-  mounted: function mounted() {
-    this.generate();
-  },
-
-
   methods: {
     /**
-     * Generate barcode
+     * Generate bar code.
      */
     generate: function generate() {
-      JsBarcode(this.$el, this.value, this.options);
+      if (this.$el) {
+        JsBarcode(this.$el, String(this.value), this.options);
+      }
     }
+  },
+
+  mounted: function mounted() {
+    this.generate();
   }
 };
 

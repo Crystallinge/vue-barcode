@@ -1,8 +1,8 @@
 # vue-barcode
 
-[![Downloads](https://img.shields.io/npm/dm/@xkeshi/vue-barcode.svg)](https://www.npmjs.com/package/@xkeshi/vue-barcode) [![Version](https://img.shields.io/npm/v/@xkeshi/vue-barcode.svg)](https://www.npmjs.com/package/@xkeshi/vue-barcode)
+[![Build Status](https://travis-ci.org/xkeshi/vue-barcode.svg)](https://travis-ci.org/xkeshi/vue-barcode) [![Downloads](https://img.shields.io/npm/dm/@xkeshi/vue-barcode.svg)](https://www.npmjs.com/package/@xkeshi/vue-barcode) [![Version](https://img.shields.io/npm/v/@xkeshi/vue-barcode.svg)](https://www.npmjs.com/package/@xkeshi/vue-barcode)
 
-> Barcode component for [Vue.js](https://vuejs.org/). It is based on [JsBarcode](https://github.com/lindell/JsBarcode).
+> Barcode component for [Vue.js](https://vuejs.org/), bases on [JsBarcode](https://github.com/lindell/JsBarcode).
 
 - [Website](https://xkeshi.github.io/vue-barcode)
 
@@ -19,10 +19,10 @@
 
 ```text
 dist/
-├── vue-barcode.js        (71 KB, UMD)
-├── vue-barcode.min.js    (32 KB, UMD, compressed)
-├── vue-barcode.common.js (71 KB, CommonJS)
-└── vue-barcode.esm.js    (71 KB, ES Module)
+├── vue-barcode.js        (UMD)
+├── vue-barcode.min.js    (UMD, compressed)
+├── vue-barcode.common.js (CommonJS)
+└── vue-barcode.esm.js    (ES Module)
 ```
 
 ## Getting started
@@ -30,21 +30,33 @@ dist/
 ### Install
 
 ```shell
-npm install @xkeshi/vue-barcode
+npm install @xkeshi/vue-barcode vue
+```
+
+In browser:
+
+```html
+<script src="/path/to/vue.js"></script>
+<script src="/path/to/vue-barcode.js"></script>
 ```
 
 ### Usage
 
-- Browser: `window.VueBarcode`
-- CommonJS: `var VueBarcode = require('@xkeshi/vue-barcode')`
-- ES2015: `import VueBarcode from '@xkeshi/vue-barcode'`
-
 ```js
-Vue.component('barcode', VueBarcode);
+import Vue from 'vue';
+import VueBarcode from '@xkeshi/vue-barcode';
+
+Vue.component(VueBarcode.name, VueBarcode);
 ```
 
 ```html
 <barcode value="Hello, World!" :options="{ displayValue: false }"></barcode>
+```
+
+In browser:
+
+```html
+<script>Vue.component(VueBarcode.name, VueBarcode);</script>
 ```
 
 [⬆ back to top](#table-of-contents)
@@ -86,6 +98,6 @@ Maintained under the [Semantic Versioning guidelines](http://semver.org/).
 
 ## License
 
-[MIT](http://opensource.org/licenses/MIT) © [Xkeshi](http://xkeshi.com)
+[MIT](https://opensource.org/licenses/MIT) © [Xkeshi](http://xkeshi.com)
 
 [⬆ back to top](#table-of-contents)

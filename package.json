@@ -1,16 +1,16 @@
 {
   "name": "@xkeshi/vue-barcode",
   "description": "Barcode component for Vue.js.",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "main": "dist/vue-barcode.common.js",
   "module": "dist/vue-barcode.esm.js",
-  "browser": "dist/vue-barcode.js",
+  "unpkg": "dist/vue-barcode.js",
   "repository": "xkeshi/vue-barcode",
   "homepage": "https://xkeshi.github.io/vue-barcode",
   "license": "MIT",
   "author": {
     "name": "Chen Fengyuan",
-    "url": "http://chenfengyuan.com"
+    "url": "https://chenfengyuan.com"
   },
   "files": [
     "src",
@@ -29,31 +29,45 @@
     "development"
   ],
   "scripts": {
-    "dev": "rollup -c -m -w",
-    "lint": "eslint ./src",
     "build": "rollup -c",
+    "clear": "del-cli dist",
     "compress": "uglifyjs ./dist/vue-barcode.js -o ./dist/vue-barcode.min.js -c -m --comments /^!/",
-    "prebuild": "npm run lint --fix",
-    "postbuild": "npm run compress",
-    "start": "npm run dev"
+    "dev": "rollup -c -m -w",
+    "lint": "eslint src test *.js --fix",
+    "release": "npm run clear && npm run lint && npm run build && npm run compress && npm test",
+    "start": "npm run dev",
+    "test": "karma start test/karma.conf.js"
   },
   "dependencies": {
-    "jsbarcode": "^3.8.0"
+    "jsbarcode": "^3.9.0"
   },
   "devDependencies": {
-    "babel-core": "^6.26.0",
+    "babel-core": "^6.26.3",
     "babel-plugin-external-helpers": "^6.22.0",
-    "babel-preset-env": "^1.6.0",
+    "babel-preset-env": "^1.7.0",
     "babel-preset-stage-0": "^6.24.1",
-    "eslint": "^4.7.2",
-    "eslint-config-airbnb-base": "^12.0.0",
-    "eslint-plugin-import": "^2.2.0",
-    "rollup": "^0.50.0",
-    "rollup-plugin-babel": "^3.0.2",
-    "rollup-plugin-commonjs": "^8.0.2",
-    "rollup-plugin-node-resolve": "^3.0.0",
+    "chai": "^4.1.2",
+    "change-case": "^3.0.2",
+    "create-banner": "^1.0.0",
+    "del-cli": "^1.1.0",
+    "eslint": "^4.19.1",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-plugin-import": "^2.12.0",
+    "karma": "^2.0.3",
+    "karma-chai": "^0.1.0",
+    "karma-chrome-launcher": "^2.2.0",
+    "karma-mocha": "^1.3.0",
+    "karma-mocha-reporter": "^2.2.5",
+    "karma-rollup-preprocessor": "^6.0.0",
+    "mocha": "^5.2.0",
+    "puppeteer": "^1.5.0",
+    "rollup": "^0.60.7",
+    "rollup-plugin-babel": "^3.0.4",
+    "rollup-plugin-commonjs": "^9.1.3",
+    "rollup-plugin-node-resolve": "^3.3.0",
     "rollup-watch": "^4.3.1",
-    "uglify-js": "^3.1.2"
+    "uglify-js": "^3.4.1",
+    "vue": "^2.5.16"
   },
   "peerDependencies": {
     "vue": "^2.2.0"
