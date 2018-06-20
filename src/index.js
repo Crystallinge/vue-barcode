@@ -1,29 +1,29 @@
 import JsBarcode from 'jsbarcode/src/JsBarcode';
 
 export default {
-  props: {
-    /*
-     * The value of the barcode.
-     */
-    value: {
-      type: null,
-      required: true,
-    },
+  name: 'barcode',
 
-    /*
-     * The options for the barcode generator.
+  props: {
+    /**
+     * The options for the bar code generator.
      * {@link https://github.com/lindell/JsBarcode#options}
      */
-    options: {
-      type: Object,
-    },
+    options: Object,
 
-    /*
+    /**
      * The tag of the component root element.
      */
     tag: {
       type: String,
       default: 'canvas',
+    },
+
+    /**
+     * The value of the bar code.
+     */
+    value: {
+      type: null,
+      default: '',
     },
   },
 
@@ -32,31 +32,33 @@ export default {
   },
 
   watch: {
-    /*
-     * Update barcode when value change
+    /**
+     * Update bar code when value change.
      */
     value() {
       this.generate();
     },
 
-    /*
-     * Update barcode when options change
+    /**
+     * Update bar code when options change.
      */
     options() {
       this.generate();
     },
   },
 
-  mounted() {
-    this.generate();
-  },
-
   methods: {
     /**
-     * Generate barcode
+     * Generate bar code.
      */
     generate() {
-      JsBarcode(this.$el, String(this.value), this.options);
+      if (this.$el) {
+        JsBarcode(this.$el, String(this.value), this.options);
+      }
     },
+  },
+
+  mounted() {
+    this.generate();
   },
 };
