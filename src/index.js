@@ -1,4 +1,4 @@
-import JsBarcode from 'jsbarcode/src/JsBarcode';
+import JsBarcode from 'jsbarcode';
 
 export default {
   name: 'barcode',
